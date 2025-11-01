@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -26,10 +25,18 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .btn-primary { background: #3b82f6; color: white; }
 .btn-primary:hover { background: #2563eb; }
 .btn-secondary { background: #e5e7eb; color: #374151; }
-.canvas { background: whitesmoke; border-radius: 8px; padding: 20px; min-height: 600px; transition: all 0.3s; }
+
+/* --- [수정] 배율(scale)을 위한 transform-origin 추가 --- */
+.canvas { 
+  background: whitesmoke; border-radius: 8px; padding: 20px; min-height: 600px; 
+  transition: all 0.3s;
+  transform-origin: top center; /* 배율 변경 기준점 */
+}
+/* ---------------------------------------------------- */
+
 .canvas.mobile-view { max-width: 375px; margin: 0 auto; }
 .grid-container { display: grid; gap: 10px; min-height: 500px; }
-.module { background: #8c6c3c; border-radius: 0; min-height: 60px; cursor: move; position: relative; border: 2px solid transparent; transition: all 0.2s; }
+.module { background: #8c6c3c; border-radius: 0; min-height: 60px; cursor: pointer; position: relative; border: 2px solid transparent; transition: all 0.2s; }
 .module:hover { border-color: #3b82f6; transform: translateY(-2px); }
 .module.selected { border-color: #ef4444; border-width: 3px; }
 .module.dragging { opacity: 0.5; }
@@ -38,6 +45,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .module-warning { position: absolute; top: 4px; right: 28px; background: rgba(245, 158, 11, 0.9); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; }
 .module-delete { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; cursor: pointer; display: none; font-size: 14px; }
 .module:hover .module-delete { display: block; }
+.module-drag-handle { position: absolute; bottom: 4px; right: 4px; width: 24px; height: 24px; background: rgba(0,0,0,0.5); color: white; border-radius: 4px; cursor: move; display: none; justify-content: center; align-items: center; font-size: 16px; line-height: 1; padding-bottom: 2px; }
+.module:hover .module-drag-handle { display: flex; }
 .stats { background: #eff6ff; padding: 12px; border-radius: 6px; margin-bottom: 16px; }
 .stats-item { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85em; }
 .mode-selector { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
@@ -49,12 +58,32 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .custom-offset { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 .mode-hint { font-size: 0.75em; color: #6b7280; margin-top: 6px; padding: 8px; background: #f0f9ff; border-radius: 4px; }
 .hint-text { font-size: 0.75em; color: #6b7280; margin-top: 4px; }
+.lock-toggle { display: flex; align-items: center; gap: 8px; background: #f0f9ff; padding: 10px; border-radius: 6px; margin-top: 12px; }
+.lock-toggle label { margin-bottom: 0; font-size: 0.9em; font-weight: 500; }
 .code-tabs { display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 2px solid #e5e7eb; }
 .code-tab { padding: 8px 16px; background: transparent; border: none; color: #6b7280; cursor: pointer; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -2px; }
 .code-tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
 .code-display { background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; max-height: 500px; overflow-y: auto; white-space: pre; }
 .toast { position: fixed; bottom: 20px; right: 20px; background: #111827; color: white; padding: 12px 20px; border-radius: 8px; z-index: 1000; }
-@media (max-width: 1400px) { .workspace { grid-template-columns: 1fr; } }
+@media (max-width: 1400px) { 
+  .workspace { 
+    grid-template-columns: 320px 1fr; 
+  }
+  .workspace > .panel:last-of-type { 
+    grid-column: 1 / -1; 
+  }
+}
+@media (max-width: 768px) {
+  .workspace {
+    grid-template-columns: 1fr; 
+  }
+  .workspace > .panel:last-of-type { 
+    grid-column: auto; 
+  }
+  body { padding: 10px; }
+  .container { padding: 15px; }
+  .workspace { gap: 15px; }
+}
 </style>
 </head>
 <body>
@@ -83,94 +112,95 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
         <input type="number" id="columns" class="control-input" min="1" max="12" value="6">
         <label class="control-label" style="margin-top: 12px">갭 크기 (px)</label>
         <input type="number" id="gap" class="control-input" min="0" max="50" value="10">
+        
+        <label class="control-label" style="margin-top: 12px">캔버스 배율</label>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <input type="range" id="canvas-scale" class="control-input" min="25" max="150" value="100" style="flex-grow: 1; padding: 0;">
+          <span id="scale-readout" style="font-size: 0.9em; width: 45px; text-align: right;">100%</span>
+        </div>
+        </div>
+
+      <div class="control-group">
+        <h3>➕ 커스텀 모듈 추가</h3>
+        <div class="input-group">
+          <input type="number" id="custom-col" class="control-input" placeholder="컬럼" min="1" value="2">
+          <input type="number" id="custom-row" class="control-input" placeholder="로우" min="1" value="2">
+        </div>
+        <label class="control-label" style="margin-top: 8px">배경색</label>
+        <input type="color" id="custom-color" class="control-input" value="#8c6c3c" style="height: 40px; cursor: pointer;">
+        <div style="display: flex; align-items: center; gap: 5px; margin-top: 5px;">
+          <input type="checkbox" id="custom-transparent" onchange="toggleColorPicker('custom', this.checked)">
+          <label for="custom-transparent" style="font-size: 0.85em;">배경 투명</label>
+        </div>
+        <label class="control-label" style="margin-top: 12px">윤곽선 색</label>
+        <input type="color" id="custom-border-color" class="control-input" value="#000000" style="height: 40px; cursor: pointer;">
+        <label class="control-label" style="margin-top: 12px">윤곽선 두께 (px)</label>
+        <input type="number" id="custom-border-width" class="control-input" value="0" min="0" max="20">
+        <button class="btn btn-primary" onclick="addCustomModule()" style="margin-top: 12px">모듈 추가</button>
       </div>
 
-```
-  <div class="control-group">
-    <h3>➕ 커스텀 모듈 추가</h3>
-    <div class="input-group">
-      <input type="number" id="custom-col" class="control-input" placeholder="컬럼" min="1" value="2">
-      <input type="number" id="custom-row" class="control-input" placeholder="로우" min="1" value="2">
+      <div class="control-group" id="edit-panel" style="display: none;">
+        <h3>✏️ 모듈 편집</h3>
+        <label class="control-label">데스크톱 컬럼 span</label>
+        <input type="number" id="edit-col" class="control-input" min="1" max="12">
+        <label class="control-label" style="margin-top: 12px">데스크톱 로우 span</label>
+        <input type="number" id="edit-row" class="control-input" min="1" max="10">
+        <label class="control-label" style="margin-top: 12px">모바일 컬럼 span (선택)</label>
+        <input type="number" id="edit-mobile-col" class="control-input" min="1" max="12" placeholder="비워두면 자동">
+        <div class="hint-text" id="mobile-span-hint">자동: 비율 계산</div>
+        <label class="control-label" style="margin-top: 12px">배경색</label>
+        <input type="color" id="edit-color" class="control-input" style="height: 40px; cursor: pointer;">
+        <div style="display: flex; align-items: center; gap: 5px; margin-top: 5px;">
+          <input type="checkbox" id="edit-transparent" onchange="toggleColorPicker('edit', this.checked)">
+          <label for="edit-transparent" style="font-size: 0.85em;">배경 투명</label>
+        </div>
+        <label class="control-label" style="margin-top: 12px">윤곽선 색</label>
+        <input type="color" id="edit-border-color" class="control-input" style="height: 40px; cursor: pointer;">
+        <label class="control-label" style="margin-top: 12px">윤곽선 두께 (px)</label>
+        <input type="number" id="edit-border-width" class="control-input" value="0" min="0" max="20">
+        <button class="btn btn-secondary" style="margin-top: 12px" onclick="deleteSelected()">🗑️ 삭제</button>
+      </div>
+
+      <div class="control-group">
+        <h3>📱 모바일 반응형 모드</h3>
+        <label class="control-label">모바일 목표 컬럼 수</label>
+        <input type="number" id="target-columns" class="control-input" min="1" max="12" value="2">
+        <div class="lock-toggle">
+          <input type="checkbox" id="mobile-order-lock" onchange="toggleMobileOrderLock(event)">
+          <label for="mobile-order-lock">🔒 모바일 순서 동기화</label>
+        </div>
+        <label class="control-label" style="margin-top: 12px">변환 모드</label>
+        <div class="mode-selector">
+          <div class="mode-option selected" onclick="selectMode('reflow')" data-mode="reflow">
+            <div class="mode-option-title">🔄 리플로우</div>
+            <div class="mode-option-desc">순서대로 재배치</div>
+          </div>
+          <div class="mode-option" onclick="selectMode('center')" data-mode="center" style="opacity: 0.5; cursor: not-allowed;">
+            <div class="mode-option-title">⬅️➡️ 중앙 유지 (비활성)</div>
+            <div class="mode-option-desc">양끝 균등 제거</div>
+          </div>
+        </div>
+        <div class="mode-hint" id="mode-hint">6열 → 2열로 리플로우</div>
+      </div>
+
+      <div class="control-group">
+        <button class="btn btn-secondary" onclick="clearAll()">🗑️ 전체 삭제</button>
+      </div>
     </div>
-    <label class="control-label" style="margin-top: 8px">배경색</label>
-    <input type="color" id="custom-color" class="control-input" value="#8c6c3c" style="height: 40px; cursor: pointer;">
-    <button class="btn btn-primary" onclick="addCustomModule()">모듈 추가</button>
-  </div>
 
-  <div class="control-group" id="edit-panel" style="display: none;">
-    <h3>✏️ 모듈 편집</h3>
-    <label class="control-label">데스크톱 컬럼 span</label>
-    <input type="number" id="edit-col" class="control-input" min="1" max="12">
-    <label class="control-label" style="margin-top: 12px">데스크톱 로우 span</label>
-    <input type="number" id="edit-row" class="control-input" min="1" max="10">
-    <label class="control-label" style="margin-top: 12px">모바일 컬럼 span (선택)</label>
-    <input type="number" id="edit-mobile-col" class="control-input" min="1" max="12" placeholder="비워두면 자동">
-    <div class="hint-text" id="mobile-span-hint">자동: 비율 계산</div>
-    <label class="control-label" style="margin-top: 12px">배경색</label>
-    <input type="color" id="edit-color" class="control-input" style="height: 40px; cursor: pointer;">
-    <button class="btn btn-secondary" style="margin-top: 12px" onclick="deleteSelected()">🗑️ 삭제</button>
-  </div>
-
-  <div class="control-group">
-    <h3>📱 모바일 반응형 모드</h3>
-    <label class="control-label">모바일 목표 컬럼 수</label>
-    <input type="number" id="target-columns" class="control-input" min="1" max="12" value="2">
-    
-    <label class="control-label" style="margin-top: 12px">변환 모드</label>
-    <div class="mode-selector">
-      <div class="mode-option selected" onclick="selectMode('reflow')" data-mode="reflow">
-        <div class="mode-option-title">🔄 리플로우</div>
-        <div class="mode-option-desc">순서대로 재배치</div>
-      </div>
-      <div class="mode-option" onclick="selectMode('center')" data-mode="center">
-        <div class="mode-option-title">⬅️➡️ 중앙 유지</div>
-        <div class="mode-option-desc">양끝 균등 제거</div>
-      </div>
-      <div class="mode-option" onclick="selectMode('left')" data-mode="left">
-        <div class="mode-option-title">⬅️ 왼쪽 유지</div>
-        <div class="mode-option-desc">오른쪽부터 제거</div>
-      </div>
-      <div class="mode-option" onclick="selectMode('right')" data-mode="right">
-        <div class="mode-option-title">➡️ 오른쪽 유지</div>
-        <div class="mode-option-desc">왼쪽부터 제거</div>
-      </div>
-      <div class="mode-option" onclick="selectMode('custom')" data-mode="custom">
-        <div class="mode-option-title">⚙️ 커스텀</div>
-        <div class="mode-option-desc">오프셋 직접 설정</div>
-      </div>
+    <div class="canvas" id="canvas" onclick="handleCanvasClick(event)">
+      <div class="grid-container" id="grid"></div>
     </div>
-    
-    <div class="mode-hint" id="mode-hint">6열 → 2열로 리플로우</div>
-    
-    <div id="custom-offset-panel" style="display: none; margin-top: 12px;">
-      <label class="control-label">커스텀 오프셋</label>
-      <div class="custom-offset">
-        <input type="number" id="offset-left" class="control-input" placeholder="왼쪽 제거" min="0" value="2">
-        <input type="number" id="offset-right" class="control-input" placeholder="오른쪽 제거" min="0" value="2">
+
+    <div class="panel">
+      <h3>💻 생성된 코드</h3>
+      <div class="code-tabs">
+        <button class="code-tab active" onclick="switchTab('html', event)">HTML</button>
+        <button class="code-tab" onclick="switchTab('css', event)">CSS</button>
       </div>
+      <div class="code-display" id="code-display"></div>
+      <button class="btn btn-primary" style="margin-top: 12px" onclick="copyCode()">📋 클립보드에 복사</button>
     </div>
-  </div>
-
-  <div class="control-group">
-    <button class="btn btn-secondary" onclick="clearAll()">🗑️ 전체 삭제</button>
-  </div>
-</div>
-
-<div class="canvas" id="canvas">
-  <div class="grid-container" id="grid"></div>
-</div>
-
-<div class="panel">
-  <h3>💻 생성된 코드</h3>
-  <div class="code-tabs">
-    <button class="code-tab active" onclick="switchTab('html', event)">HTML</button>
-    <button class="code-tab" onclick="switchTab('css', event)">CSS</button>
-  </div>
-  <div class="code-display" id="code-display"></div>
-  <button class="btn btn-primary" style="margin-top: 12px" onclick="copyCode()">📋 클립보드에 복사</button>
-</div>
-```
-
   </div>
 </div>
 
@@ -181,22 +211,30 @@ let modules = [];
 let desktopColumns = 6, desktopGap = 10;
 let targetColumns = 2, mobileGap = 10;
 let responsiveMode = 'reflow';
-let customOffsetLeft = 2, customOffsetRight = 2;
 let currentView = 'desktop', selectedModule = null, activeTab = 'html', draggedIndex = null;
 let desktopOrder = [], mobileOrder = [];
+let mobileOrderLocked = false;
+
+function toggleColorPicker(prefix, isTransparent) {
+  const colorInput = document.getElementById(prefix + '-color');
+  colorInput.disabled = isTransparent;
+  colorInput.style.opacity = isTransparent ? 0.5 : 1;
+  if (prefix === 'edit' && selectedModule !== null) {
+    modules[selectedModule].transparent = isTransparent;
+    render();
+  }
+}
 
 function calculateMobileSpan(desktopCol, desktopCols, targetCols) {
-  // 비율 계산: (desktopCol / desktopCols) * targetCols
   const ratio = desktopCol / desktopCols;
   const calculated = Math.round(ratio * targetCols);
-  // 최소 1, 최대 targetCols
   return Math.max(1, Math.min(calculated, targetCols));
 }
 
 function getMobileSpan(module) {
-  // 수동 설정이 있으면 그것 사용, 없으면 자동 계산
+  const clampedTarget = Math.min(module.mobileCol, targetColumns);
   if(module.mobileCol !== undefined && module.mobileCol !== null && module.mobileCol !== '') {
-    return Math.min(module.mobileCol, targetColumns);
+    return Math.max(1, clampedTarget);
   }
   return calculateMobileSpan(module.col, desktopColumns, targetColumns);
 }
@@ -206,14 +244,18 @@ function switchView(view) {
   document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
   event.target.classList.add('active');
   document.getElementById('canvas').classList.toggle('mobile-view', view === 'mobile');
+  deselectModule();
   render();
 }
 
 function selectMode(mode) {
+  if (mode !== 'reflow') {
+    showToast('이 모드는 현재 아키텍처에서 지원되지 않습니다.');
+    return;
+  }
   responsiveMode = mode;
   document.querySelectorAll('.mode-option').forEach(opt => opt.classList.remove('selected'));
   document.querySelector(`[data-mode="${mode}"]`).classList.add('selected');
-  document.getElementById('custom-offset-panel').style.display = mode === 'custom' ? 'block' : 'none';
   updateModeHint();
   updateCode();
   showToast(getModeLabel(mode) + ' 모드');
@@ -225,21 +267,7 @@ function getModeLabel(mode) {
 
 function updateModeHint() {
   const hint = document.getElementById('mode-hint');
-  const removed = desktopColumns - targetColumns;
-  
-  if(responsiveMode === 'reflow') {
-    hint.textContent = `${desktopColumns}열 → ${targetColumns}열로 리플로우`;
-  } else if(responsiveMode === 'center') {
-    const eachSide = Math.floor(removed / 2);
-    hint.textContent = `${desktopColumns}열 → ${targetColumns}열 (양끝 ${eachSide}개씩 제거)`;
-  } else if(responsiveMode === 'left') {
-    hint.textContent = `${desktopColumns}열 → ${targetColumns}열 (오른쪽 ${removed}개 제거)`;
-  } else if(responsiveMode === 'right') {
-    hint.textContent = `${desktopColumns}열 → ${targetColumns}열 (왼쪽 ${removed}개 제거)`;
-  } else if(responsiveMode === 'custom') {
-    const total = desktopColumns - customOffsetLeft - customOffsetRight;
-    hint.textContent = `${desktopColumns}열 → ${total}열 (왼쪽 ${customOffsetLeft}, 오른쪽 ${customOffsetRight} 제거)`;
-  }
+  hint.textContent = `${desktopColumns}열 → ${targetColumns}열로 리플로우`;
 }
 
 function updateMobileSpanHint() {
@@ -250,45 +278,115 @@ function updateMobileSpanHint() {
   hint.textContent = `자동: ${auto}열 (${m.col}/${desktopColumns} × ${targetColumns})`;
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(value, max));
+}
+
+function toggleMobileOrderLock(event) {
+  mobileOrderLocked = event.target.checked;
+  if (mobileOrderLocked) {
+    mobileOrder = [...desktopOrder];
+    showToast('모바일 순서가 데스크톱에 동기화됩니다.');
+    render();
+  } else {
+    showToast('모바일 순서 동기화 해제');
+  }
+}
+
 function init() {
   document.getElementById('columns').addEventListener('input', e => { 
-    desktopColumns = parseInt(e.target.value) || 1; 
+    desktopColumns = clamp(parseInt(e.target.value) || 1, 1, 12);
     updateStats(); updateModeHint(); updateMobileSpanHint(); render(); 
   });
-  document.getElementById('gap').addEventListener('input', e => { desktopGap = parseInt(e.target.value) || 0; updateStats(); render(); });
+  document.getElementById('gap').addEventListener('input', e => { 
+    desktopGap = clamp(parseInt(e.target.value) || 0, 0, 50);
+    updateStats(); render(); 
+  });
   document.getElementById('target-columns').addEventListener('input', e => { 
-    targetColumns = parseInt(e.target.value) || 1; 
+    targetColumns = clamp(parseInt(e.target.value) || 1, 1, 12); 
     updateModeHint(); updateMobileSpanHint(); updateCode(); render();
   });
-  document.getElementById('offset-left').addEventListener('input', e => { customOffsetLeft = parseInt(e.target.value) || 0; updateModeHint(); updateCode(); });
-  document.getElementById('offset-right').addEventListener('input', e => { customOffsetRight = parseInt(e.target.value) || 0; updateModeHint(); updateCode(); });
+  
+  // --- [신규] 캔버스 배율 슬라이더 리스너 ---
+  document.getElementById('canvas-scale').addEventListener('input', e => {
+    const scaleValue = parseInt(e.target.value);
+    document.getElementById('canvas').style.transform = `scale(${scaleValue / 100})`;
+    document.getElementById('scale-readout').textContent = `${scaleValue}%`;
+  });
+  // ----------------------------------------
+
+  // 모듈 편집 리스너
   document.getElementById('edit-col').addEventListener('input', e => { 
     if(selectedModule!==null) { 
-      modules[selectedModule].col = parseInt(e.target.value)||1; 
+      const maxCol = desktopColumns;
+      modules[selectedModule].col = clamp(parseInt(e.target.value)||1, 1, maxCol);
+      e.target.value = modules[selectedModule].col; 
       updateMobileSpanHint();
       render(); 
     }
   });
-  document.getElementById('edit-row').addEventListener('input', e => { if(selectedModule!==null) { modules[selectedModule].row = parseInt(e.target.value)||1; render(); }});
+  document.getElementById('edit-row').addEventListener('input', e => { 
+    if(selectedModule!==null) { 
+      modules[selectedModule].row = clamp(parseInt(e.target.value)||1, 1, 99);
+      e.target.value = modules[selectedModule].row;
+      render(); 
+    }});
   document.getElementById('edit-mobile-col').addEventListener('input', e => { 
     if(selectedModule!==null) { 
       const val = e.target.value;
-      modules[selectedModule].mobileCol = val === '' ? null : parseInt(val);
+      if (val === '') {
+        modules[selectedModule].mobileCol = null;
+      } else {
+        const maxCol = targetColumns;
+        modules[selectedModule].mobileCol = clamp(parseInt(val)||1, 1, maxCol);
+        e.target.value = modules[selectedModule].mobileCol;
+      }
       render(); 
     }
   });
-  document.getElementById('edit-color').addEventListener('input', e => { if(selectedModule!==null) { modules[selectedModule].color = e.target.value; render(); }});
+  document.getElementById('edit-color').addEventListener('input', e => { 
+      if(selectedModule!==null) { modules[selectedModule].color = e.target.value; render(); }
+  });
+  document.getElementById('edit-border-color').addEventListener('input', e => { 
+    if(selectedModule!==null) { modules[selectedModule].borderColor = e.target.value; render(); }
+  });
+  document.getElementById('edit-border-width').addEventListener('input', e => { 
+    if(selectedModule!==null) { 
+      modules[selectedModule].borderWidth = clamp(parseInt(e.target.value) || 0, 0, 20);
+      e.target.value = modules[selectedModule].borderWidth;
+      render(); 
+    }
+  });
+
   updateStats(); updateModeHint(); render();
 }
 
 function addCustomModule() {
-  const col = parseInt(document.getElementById('custom-col').value) || 2;
-  const row = parseInt(document.getElementById('custom-row').value) || 2;
+  const col = clamp(parseInt(document.getElementById('custom-col').value) || 2, 1, desktopColumns);
+  const row = clamp(parseInt(document.getElementById('custom-row').value) || 2, 1, 99);
   const color = document.getElementById('custom-color').value;
-  const newModule = { col, row, color, mobileCol: null, id: Date.now() };
+  const transparent = document.getElementById('custom-transparent').checked;
+  const borderColor = document.getElementById('custom-border-color').value;
+  const borderWidth = clamp(parseInt(document.getElementById('custom-border-width').value) || 0, 0, 20);
+
+  const newModule = { 
+    col, row, color, transparent, borderColor, borderWidth, 
+    mobileCol: null, id: Date.now() 
+  };
+  
   modules.push(newModule);
   desktopOrder.push(newModule.id);
-  mobileOrder.push(newModule.id);
+  
+  if (mobileOrderLocked) {
+    mobileOrder.push(newModule.id);
+  } else {
+    mobileOrder.push(newModule.id);
+  }
+  
+  document.getElementById('custom-transparent').checked = false;
+  toggleColorPicker('custom', false);
+  document.getElementById('custom-border-width').value = 0;
+
   showToast(`${col}×${row} 모듈 추가`);
   render();
 }
@@ -297,24 +395,42 @@ function selectModule(index) {
   selectedModule = index;
   const m = modules[index];
   document.getElementById('edit-panel').style.display = 'block';
-  document.getElementById('edit-col').value = m.col;
+  
+  document.getElementById('edit-col').value = clamp(m.col, 1, desktopColumns);
+  document.getElementById('edit-col').max = desktopColumns;
   document.getElementById('edit-row').value = m.row;
-  document.getElementById('edit-mobile-col').value = m.mobileCol !== null ? m.mobileCol : '';
+  document.getElementById('edit-mobile-col').value = m.mobileCol !== null ? clamp(m.mobileCol, 1, targetColumns) : '';
+  document.getElementById('edit-mobile-col').max = targetColumns;
+  
   document.getElementById('edit-color').value = m.color || '#8c6c3c';
+  const isTransparent = m.transparent || false;
+  document.getElementById('edit-transparent').checked = isTransparent;
+  toggleColorPicker('edit', isTransparent);
+  
+  document.getElementById('edit-border-color').value = m.borderColor || '#000000';
+  document.getElementById('edit-border-width').value = m.borderWidth || 0;
+  
   updateMobileSpanHint();
   render();
 }
 
-function deleteSelected() {
-  if(selectedModule !== null) {
-    const id = modules[selectedModule].id;
-    modules.splice(selectedModule, 1);
-    desktopOrder = desktopOrder.filter(oid => oid !== id);
-    mobileOrder = mobileOrder.filter(oid => oid !== id);
+function handleCanvasClick(event) {
+  if (event.target.id === 'canvas' || event.target.id === 'grid') {
+    deselectModule();
+  }
+}
+
+function deselectModule() {
+  if (selectedModule !== null) {
     selectedModule = null;
     document.getElementById('edit-panel').style.display = 'none';
-    showToast('모듈 삭제');
     render();
+  }
+}
+
+function deleteSelected() {
+  if(selectedModule !== null) {
+    deleteModule(selectedModule, new Event('click')); 
   }
 }
 
@@ -324,10 +440,13 @@ function deleteModule(index, event) {
   modules.splice(index, 1);
   desktopOrder = desktopOrder.filter(oid => oid !== id);
   mobileOrder = mobileOrder.filter(oid => oid !== id);
+
   if(selectedModule === index) {
     selectedModule = null;
     document.getElementById('edit-panel').style.display = 'none';
-  } else if(selectedModule > index) selectedModule--;
+  } else if(selectedModule > index) {
+    selectedModule--;
+  }
   render();
 }
 
@@ -345,31 +464,43 @@ function clearAll() {
 
 function handleDragStart(index, event) {
   draggedIndex = index;
-  event.target.classList.add('dragging');
+  event.target.closest('.module').classList.add('dragging');
+  event.dataTransfer.effectAllowed = 'move';
 }
 
 function handleDragEnd(event) {
-  event.target.classList.remove('dragging');
+  document.querySelectorAll('.module.dragging').forEach(el => el.classList.remove('dragging'));
   draggedIndex = null;
 }
 
 function handleDragOver(event) {
   event.preventDefault();
+  event.dataTransfer.dropEffect = 'move';
 }
 
 function handleDrop(index, event) {
   event.preventDefault();
+  event.stopPropagation();
+  
   if(draggedIndex !== null && draggedIndex !== index) {
     const order = currentView === 'desktop' ? desktopOrder : mobileOrder;
     const draggedId = order[draggedIndex];
     order.splice(draggedIndex, 1);
     order.splice(index, 0, draggedId);
     
-    if(selectedModule === draggedIndex) selectedModule = index;
-    else if(selectedModule === index) selectedModule = draggedIndex < index ? index-1 : index+1;
+    if (currentView === 'desktop' && mobileOrderLocked) {
+      mobileOrder = [...desktopOrder];
+    }
+    
+    if (selectedModule !== null) {
+        const selectedId = modules[selectedModule].id;
+        const actualIndex = modules.findIndex(m => m.id === selectedId);
+        selectedModule = actualIndex;
+    }
     
     render();
   }
+  draggedIndex = null;
 }
 
 function getOrderedModules() {
@@ -394,22 +525,35 @@ function render() {
   
   grid.innerHTML = orderedModules.map((m, i) => {
     const actualIndex = modules.findIndex(mod => mod.id === m.id);
-    const bgColor = m.color || '#8c6c3c';
-    const col = currentView === 'desktop' ? m.col : getMobileSpan(m);
-    const showWarning = currentView === 'mobile' && m.col > targetColumns && m.mobileCol === null;
+    if (actualIndex === -1) return ''; 
+    
+    const isTransparent = m.transparent || false;
+    const bgColor = isTransparent ? 'transparent' : (m.color || '#8c6c3c');
+    const borderWidth = m.borderWidth || 0;
+    const borderColor = m.borderColor || '#000000';
+    const outlineStyle = borderWidth > 0 ? `outline: ${borderWidth}px solid ${borderColor}; outline-offset: -${borderWidth}px;` : '';
+    
+    const desktopColSpan = clamp(m.col, 1, desktopColumns);
+    const mobileColSpan = getMobileSpan(m);
+    const col = currentView === 'desktop' ? desktopColSpan : mobileColSpan;
+    
+    const showWarning = currentView === 'mobile' && 
+                        m.col > targetColumns && 
+                        (m.mobileCol === null || m.mobileCol === undefined || m.mobileCol === '');
     
     return `
     <div class="module ${selectedModule === actualIndex ? 'selected' : ''} ${showWarning ? 'warning' : ''}" 
-         style="grid-column: span ${col}; grid-row: span ${m.row}; background: ${bgColor}"
+         style="grid-column: span ${col}; grid-row: span ${m.row}; background: ${bgColor}; ${outlineStyle}"
          onclick="selectModule(${actualIndex})"
-         draggable="true"
-         ondragstart="handleDragStart(${i}, event)"
-         ondragend="handleDragEnd(event)"
          ondragover="handleDragOver(event)"
          ondrop="handleDrop(${i}, event)">
       <div class="module-info">${m.col}×${m.row}</div>
       ${showWarning ? '<div class="module-warning">!</div>' : ''}
       <button class="module-delete" onclick="deleteModule(${actualIndex}, event)">×</button>
+      <div class="module-drag-handle" 
+           draggable="true" 
+           ondragstart="handleDragStart(${i}, event)" 
+           ondragend="handleDragEnd(event)">⠿</div>
     </div>
   `}).join('');
   updateStats(); updateCode();
@@ -425,7 +569,11 @@ function generateHTML() {
 </head>
 <body>
   <div class="grid-container">
-${desktopOrder.map((id, i) => `    <div class="module module-${i + 1}"></div>`).join('\n')}
+${desktopOrder.map((id, i) => {
+    const m = modules.find(mod => mod.id === id);
+    if (!m) return '';
+    return `    <div class="module module-${i + 1}"></div>`;
+  }).join('\n')}
   </div>
 </body>
 </html>`;
@@ -450,10 +598,19 @@ function generateCSS() {
 
 ${desktopOrder.map((id, i) => {
   const m = modules.find(mod => mod.id === id);
+  if (!m) return '';
+  const desktopColSpan = clamp(m.col, 1, desktopColumns);
+  
+  const isTransparent = m.transparent || false;
+  const bgColor = isTransparent ? 'transparent' : (m.color || '#8c6c3c');
+  const borderWidth = m.borderWidth || 0;
+  const borderColor = m.borderColor || '#000000';
+  const outlineStyle = borderWidth > 0 ? `\n  outline: ${borderWidth}px solid ${borderColor};\n  outline-offset: -${borderWidth}px;` : '';
+
   return `.module-${i + 1} {
-  grid-column: span ${m.col};
+  grid-column: span ${desktopColSpan};
   grid-row: span ${m.row};
-  background: ${m.color || '#8c6c3c'};
+  background: ${bgColor};${outlineStyle}
 }`;
 }).join('\n\n')}
 
@@ -467,31 +624,23 @@ ${desktopOrder.map((id, i) => {
   
 `;
 
-  if(responsiveMode === 'custom') {
-    const actualCols = desktopColumns - customOffsetLeft - customOffsetRight;
-    css += `  /* 왼쪽 ${customOffsetLeft}개, 오른쪽 ${customOffsetRight}개 제거 → ${actualCols}열 */\n`;
-  } else if(responsiveMode === 'center') {
-    const removed = desktopColumns - targetColumns;
-    const each = Math.floor(removed / 2);
-    css += `  /* 양끝 ${each}개씩 제거 → ${targetColumns}열 */\n`;
-  } else if(responsiveMode === 'left') {
-    const removed = desktopColumns - targetColumns;
-    css += `  /* 오른쪽 ${removed}개 제거 → ${targetColumns}열 */\n`;
-  } else if(responsiveMode === 'right') {
-    const removed = desktopColumns - targetColumns;
-    css += `  /* 왼쪽 ${removed}개 제거 → ${targetColumns}열 */\n`;
-  }
+  if(responsiveMode === 'reflow') {
+      css += mobileOrder.map((id, i) => {
+      const m = modules.find(mod => mod.id === id);
+      if (!m) return '';
+      const moduleClassIndex = desktopOrder.indexOf(id) + 1;
+      if (moduleClassIndex === 0) return ''; 
 
-  css += mobileOrder.map((id, i) => {
-    const m = modules.find(mod => mod.id === id);
-    const mobileSpan = getMobileSpan(m);
-    const comment = m.mobileCol !== null ? ' /* 수동 설정 */' : ` /* 자동: ${m.col}/${desktopColumns} × ${targetColumns} = ${mobileSpan} */`;
-    return `  .module-${desktopOrder.indexOf(id) + 1} {
+      const mobileSpan = getMobileSpan(m);
+      const comment = m.mobileCol !== null ? ' /* 수동 설정 */' : ` /* 자동: ${m.col}/${desktopColumns} × ${targetColumns} = ${mobileSpan} */`;
+      
+      return `  .module-${moduleClassIndex} {
     grid-column: span ${mobileSpan};${comment}
     grid-row: span ${m.row};
     order: ${i};
   }`;
-  }).join('\n\n');
+    }).join('\n\n');
+  } 
 
   css += '\n}';
   return css;
