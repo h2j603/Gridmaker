@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=1280, initial-scale=1.0">
 <title>고급 반응형 그리드 시스템</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -26,13 +26,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .btn-primary:hover { background: #2563eb; }
 .btn-secondary { background: #e5e7eb; color: #374151; }
 
-/* --- [수정] 배율(scale)을 위한 transform-origin 추가 --- */
 .canvas { 
   background: whitesmoke; border-radius: 8px; padding: 20px; min-height: 600px; 
   transition: all 0.3s;
   transform-origin: top center; /* 배율 변경 기준점 */
 }
-/* ---------------------------------------------------- */
 
 .canvas.mobile-view { max-width: 375px; margin: 0 auto; }
 .grid-container { display: grid; gap: 10px; min-height: 500px; }
@@ -297,7 +295,7 @@ function toggleMobileOrderLock(event) {
     showToast('모바일 순서가 데스크톱에 동기화됩니다.');
     render();
   } else {
-    showToast('모바일 순F서 동기화 해제');
+    showToast('모바일 순서 동기화 해제');
   }
 }
 
