@@ -35,16 +35,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   transform-origin: top center; /* 배율 변경 기준점 */
 }
 
-.canvas.mobile-view { 
-  max-width: 375px; 
-  margin: 0 auto; 
-  min-height: auto; /* [수정됨] 모바일 뷰 최소 높이 제거 */
-}
-/* [추가됨] 모바일 뷰의 그리드 컨테이너 최소 높이 제거 */
-.canvas.mobile-view .grid-container {
-  min-height: auto; 
-}
-
+.canvas.mobile-view { max-width: 375px; margin: 0 auto; }
 .grid-container { display: grid; gap: 10px; min-height: 500px; }
 .module { background: #8c6c3c; border-radius: 0; min-height: 60px; cursor: pointer; position: relative; border: 2px solid transparent; transition: all 0.2s; overflow: hidden; }
 .module:hover { border-color: #3b82f6; transform: translateY(-2px); }
@@ -102,7 +93,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
 <div class="container">
   <div class="header">
-    <h1>Grid Maker</h1>
+    <h1>📐 고급 반응형 그리드 시스템 v2</h1>
     <p>컴포넌트 + 히스토리 + 그룹화 기능</p>
   </div>
 
