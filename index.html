@@ -65,6 +65,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .code-tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
 .code-display { background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; max-height: 500px; overflow-y: auto; white-space: pre; }
 .toast { position: fixed; bottom: 20px; right: 20px; background: #111827; color: white; padding: 12px 20px; border-radius: 8px; z-index: 1000; }
+
+/* --- [삭제] 1400px 이하일 때 2단으로 바뀌는 규칙 제거 --- */
+/*
 @media (max-width: 1400px) { 
   .workspace { 
     grid-template-columns: 320px 1fr; 
@@ -73,13 +76,18 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
     grid-column: 1 / -1; 
   }
 }
+*/
+
+/* --- [수정] 768px 이하일 때 레이아웃 변경 규칙만 제거 --- */
 @media (max-width: 768px) {
+  /*
   .workspace {
     grid-template-columns: 1fr; 
   }
   .workspace > .panel:last-of-type { 
     grid-column: auto; 
   }
+  */
   body { padding: 10px; }
   .container { padding: 15px; }
   .workspace { gap: 15px; }
@@ -289,7 +297,7 @@ function toggleMobileOrderLock(event) {
     showToast('모바일 순서가 데스크톱에 동기화됩니다.');
     render();
   } else {
-    showToast('모바일 순서 동기화 해제');
+    showToast('모바일 순F서 동기화 해제');
   }
 }
 
