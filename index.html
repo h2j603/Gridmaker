@@ -427,9 +427,11 @@ function toggleColorPicker(prefix, isTransparent) {
   }
 }
 
+// [수정] 2. '리플로우' 모드 크기 축소 문제 수정 (Math.ceil 사용)
 function calculateMobileSpan(desktopCol, desktopCols, targetCols) {
   const ratio = desktopCol / desktopCols;
-  const calculated = Math.round(ratio * targetCols);
+  // [수정] Math.round 대신 Math.ceil을 사용하여 모듈이 불필요하게 작아지는 것을 방지
+  const calculated = Math.ceil(ratio * targetCols);
   return Math.max(1, Math.min(calculated, targetCols));
 }
 
@@ -569,7 +571,9 @@ function calculateFullLayout(order, modules, columns) {
       
       // '유지' 영역에 포함된 경우
       const newStartCol = (startCol - colsToDropLeft);
-      const newSpan = clamp(module.col, 1, columns); // 스팬은 targetColumns에 맞게 재조정
+      // [수정] 1. '중앙/왼쪽/오른쪽' 프리뷰 버그 수정
+      // CSS 생성 로직과 동일하게, 새 시작점에서 그리드 끝을 넘지 않도록 스팬을 재계산
+      const newSpan = Math.min(module.col, columns - newStartCol + 1); // 'columns' is targetColumns
       
       layout.set(id, {
         startCol: newStartCol,
@@ -1200,105 +1204,4 @@ ${desktopOrder.map((id, i) => {
       
       const pos = mobileLayout.get(id);
       if (!pos) return '';
-      const { startCol, startRow, span } = pos;
-      const comment = m.mobileCol !== null ? ' /* 수동 */' : ' /* 자동 */';
-
-      return `  .module-${moduleClassIndex} {
-    grid-column: ${startCol} / span ${span};${comment}
-    grid-row: ${startRow} / span ${m.row};
-    order: 0; /* [수정] 리플로우 시 order 사용 안함 (좌표 쓰므로) */
-  }`;
-    }).join('\n\n');
-
-  } else {
-    // --- [신규] '중앙', '왼쪽', '오른쪽' 유지 로직 ---
-    const colsToDrop = desktopColumns - targetColumns;
-    let colsToDropLeft = 0;
-    let modeComment = '';
-
-    if (responsiveMode === 'center') {
-      colsToDropLeft = Math.floor(colsToDrop / 2);
-      modeComment = '중앙 유지';
-    } else if (responsiveMode === 'right') {
-      colsToDropLeft = colsToDrop;
-      modeComment = '오른쪽 유지';
-    } else { // 'left'
-      modeComment = '왼쪽 유지';
-    }
-
-    const desktopKeepStart = 1 + colsToDropLeft;
-    const desktopKeepEnd = desktopColumns - (colsToDrop - colsToDropLeft);
-    
-    css += `  /* ${modeComment}: ${desktopKeepStart} ~ ${desktopKeepEnd} 컬럼 유지 */\n\n`;
-
-    css += desktopOrder.map((id, i) => {
-      const m = modules.find(mod => mod.id === id);
-      if (!m) return '';
-      const moduleClassIndex = desktopOrder.indexOf(id) + 1;
-      if (moduleClassIndex === 0) return '';
-      
-      if (m.hiddenMobile) {
-        return `  .module-${moduleClassIndex} { display: none; /* 모바일 숨김 */ }`;
-      }
-
-      const pos = desktopLayout.get(id);
-      if (!pos) return '';
-      
-      const { startCol, startRow } = pos;
-      const endCol = startCol + m.col - 1;
-      
-      // [로직] 모듈이 '유지' 영역에 *조금이라도 걸치지 않으면* 숨김
-      // (즉, 모듈이 '제거' 영역에만 존재하면 숨김)
-      // [수정] 사용자의 요청대로 "경계에 걸치는 모듈"도 숨깁니다.
-      if (startCol < desktopKeepStart || endCol > desktopKeepEnd) {
-        return `  .module-${moduleClassIndex} {
-    display: none; /* ${modeComment} (제거 영역) */
-  }`;
-      }
-
-      // '유지' 영역에 완전히 포함된 경우
-      const newCol = startCol - colsToDropLeft;
-      // [수정] 스팬이 targetColumns보다 크면 잘라냄
-      const newSpan = Math.min(m.col, targetColumns - newCol + 1);
-      
-      return `  .module-${moduleClassIndex} {
-    grid-column: ${newCol} / span ${newSpan};
-    grid-row: ${startRow} / span ${m.row};
-    order: 0; /* 순서 고정 (필요시 order: ${startRow * 100 + startCol};) */
-  }`;
-    }).join('\n\n');
-  }
-
-  css += '\n}';
-  return css;
-}
-
-
-function updateCode() {
-  document.getElementById('code-display').textContent = activeTab === 'html' ? generateHTML() : generateCSS();
-}
-
-function switchTab(tab, event) {
-  activeTab = tab;
-  document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
-  event.target.classList.add('active');
-  updateCode();
-}
-
-function copyCode() {
-  navigator.clipboard.writeText(activeTab === 'html' ? generateHTML() : generateCSS());
-  showToast(`${activeTab.toUpperCase()} 코드 복사됨!`);
-}
-
-function showToast(message) {
-  const toast = document.getElementById('toast');
-  toast.textContent = message;
-  toast.style.display = 'block';
-  setTimeout(() => toast.style.display = 'none', 3000);
-}
-
-window.addEventListener('DOMContentLoaded', init);
-</script>
-
-</body>
-</html>
+      const
