@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=1280, initial-scale=1.0">
-<title>고급 반응형 그리드 시스템</title>
+<title>Grid Maker</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; padding: 20px; }
@@ -19,12 +19,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .control-group { margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e5e7eb; }
 .control-group:last-child { border-bottom: none; }
 .control-label { display: block; color: #374151; font-size: 0.85em; font-weight: 500; margin-bottom: 6px; }
-.control-input { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+.control-input, .control-select { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; background: white; }
 .input-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
 .btn { width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: 500; cursor: pointer; margin-bottom: 8px; font-size: 14px; }
+.btn:disabled { background: #d1d5db; cursor: not-allowed; }
 .btn-primary { background: #3b82f6; color: white; }
-.btn-primary:hover { background: #2563eb; }
+.btn-primary:hover:not(:disabled) { background: #2563eb; }
 .btn-secondary { background: #e5e7eb; color: #374151; }
+.btn-secondary:hover:not(:disabled) { background: #d1d5db; }
+.btn-group { display: flex; gap: 8px; }
 
 .canvas { 
   background: whitesmoke; border-radius: 8px; padding: 20px; min-height: 600px; 
@@ -32,19 +35,41 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   transform-origin: top center; /* 배율 변경 기준점 */
 }
 
-.canvas.mobile-view { max-width: 375px; margin: 0 auto; }
+.canvas.mobile-view { 
+  max-width: 375px; 
+  margin: 0 auto; 
+  min-height: auto; /* [수정됨] 모바일 뷰 최소 높이 제거 */
+}
+/* [추가됨] 모바일 뷰의 그리드 컨테이너 최소 높이 제거 */
+.canvas.mobile-view .grid-container {
+  min-height: auto; 
+}
+
 .grid-container { display: grid; gap: 10px; min-height: 500px; }
-.module { background: #8c6c3c; border-radius: 0; min-height: 60px; cursor: pointer; position: relative; border: 2px solid transparent; transition: all 0.2s; }
+.module { background: #8c6c3c; border-radius: 0; min-height: 60px; cursor: pointer; position: relative; border: 2px solid transparent; transition: all 0.2s; overflow: hidden; }
 .module:hover { border-color: #3b82f6; transform: translateY(-2px); }
 .module.selected { border-color: #ef4444; border-width: 3px; }
+/* --- [신규] 그룹화된 모듈 스타일 --- */
+.module[data-group-id] { box-shadow: 0 0 0 2px #a5b4fc inset; }
+.module[data-group-id]:hover { border-color: #3b82f6; }
+.module.selected[data-group-id] { border-color: #ef4444; box-shadow: 0 0 0 3px #ef4444 inset; }
+
 .module.dragging { opacity: 0.5; }
 .module.warning { border-color: #f59e0b; border-width: 2px; }
-.module-info { position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; }
-.module-warning { position: absolute; top: 4px; right: 28px; background: rgba(245, 158, 11, 0.9); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; }
-.module-delete { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; cursor: pointer; display: none; font-size: 14px; }
+.module-info { position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; z-index: 10; }
+.module-warning { position: absolute; top: 4px; right: 28px; background: rgba(245, 158, 11, 0.9); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; z-index: 10; }
+.module-delete { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; cursor: pointer; display: none; font-size: 14px; z-index: 10; }
 .module:hover .module-delete { display: block; }
-.module-drag-handle { position: absolute; bottom: 4px; right: 4px; width: 24px; height: 24px; background: rgba(0,0,0,0.5); color: white; border-radius: 4px; cursor: move; display: none; justify-content: center; align-items: center; font-size: 16px; line-height: 1; padding-bottom: 2px; }
+.module-drag-handle { position: absolute; bottom: 4px; right: 4px; width: 24px; height: 24px; background: rgba(0,0,0,0.5); color: white; border-radius: 4px; cursor: move; display: none; justify-content: center; align-items: center; font-size: 16px; line-height: 1; padding-bottom: 2px; z-index: 10; }
 .module:hover .module-drag-handle { display: flex; }
+
+/* --- [신규] 모듈 콘텐츠 스타일 --- */
+.module-content { padding: 30px 10px 10px; font-size: 14px; color: #333; }
+.module-content.image { padding: 0; width: 100%; height: 100%; object-fit: cover; }
+.module[data-type="image"] { background: #e0e0e0; }
+.module[data-type="text"] { background: #ffffff; border: 1px solid #e0e0e0; }
+.module[data-type="text"]:hover { border-color: #3b82f6; }
+
 .stats { background: #eff6ff; padding: 12px; border-radius: 6px; margin-bottom: 16px; }
 .stats-item { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85em; }
 .mode-selector { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
@@ -64,28 +89,9 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .code-display { background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; max-height: 500px; overflow-y: auto; white-space: pre; }
 .toast { position: fixed; bottom: 20px; right: 20px; background: #111827; color: white; padding: 12px 20px; border-radius: 8px; z-index: 1000; }
 
-/* --- [삭제] 1400px 이하일 때 2단으로 바뀌는 규칙 제거 --- */
-/*
-@media (max-width: 1400px) { 
-  .workspace { 
-    grid-template-columns: 320px 1fr; 
-  }
-  .workspace > .panel:last-of-type { 
-    grid-column: 1 / -1; 
-  }
-}
-*/
+@media (max-width: 1400px) { }
 
-/* --- [수정] 768px 이하일 때 레이아웃 변경 규칙만 제거 --- */
 @media (max-width: 768px) {
-  /*
-  .workspace {
-    grid-template-columns: 1fr; 
-  }
-  .workspace > .panel:last-of-type { 
-    grid-column: auto; 
-  }
-  */
   body { padding: 10px; }
   .container { padding: 15px; }
   .workspace { gap: 15px; }
@@ -96,8 +102,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
 <div class="container">
   <div class="header">
-    <h1>📐 고급 반응형 그리드 시스템</h1>
-    <p>비율 기반 자동 변환 + 수동 조정 가능</p>
+    <h1>Grid Maker</h1>
+    <p>컴포넌트 + 히스토리 + 그룹화 기능</p>
   </div>
 
   <div class="view-toggle">
@@ -128,11 +134,17 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
       <div class="control-group">
         <h3>➕ 커스텀 모듈 추가</h3>
+        <label class="control-label">모듈 타입</label>
+        <select id="custom-type" class="control-select" style="margin-bottom: 8px;">
+          <option value="box" selected>Box (색상)</option>
+          <option value="text">Text (텍스트)</option>
+          <option value="image">Image (이미지)</option>
+        </select>
         <div class="input-group">
           <input type="number" id="custom-col" class="control-input" placeholder="컬럼" min="1" value="2">
           <input type="number" id="custom-row" class="control-input" placeholder="로우" min="1" value="2">
         </div>
-        <label class="control-label" style="margin-top: 8px">배경색</label>
+        <label class="control-label" style="margin-top: 8px">배경색 (Box 타입 전용)</label>
         <input type="color" id="custom-color" class="control-input" value="#8c6c3c" style="height: 40px; cursor: pointer;">
         <div style="display: flex; align-items: center; gap: 5px; margin-top: 5px;">
           <input type="checkbox" id="custom-transparent" onchange="toggleColorPicker('custom', this.checked)">
@@ -147,14 +159,23 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
       <div class="control-group" id="edit-panel" style="display: none;">
         <h3>✏️ 모듈 편집</h3>
-        <label class="control-label">데스크톱 컬럼 span</label>
+        <label class="control-label">모듈 타입</label>
+        <select id="edit-type" class="control-select" style="margin-bottom: 12px;">
+          <option value="box">Box (색상)</option>
+          <option value="text">Text (텍스트)</option>
+          <option value="image">Image (이미지)</option>
+        </select>
+        <label class="control-label">Group ID (그룹화)</label>
+        <input type="text" id="edit-group-id" class="control-input" placeholder="예: header-group">
+
+        <label class="control-label" style="margin-top: 12px">데스크톱 컬럼 span</label>
         <input type="number" id="edit-col" class="control-input" min="1" max="12">
         <label class="control-label" style="margin-top: 12px">데스크톱 로우 span</label>
         <input type="number" id="edit-row" class="control-input" min="1" max="10">
         <label class="control-label" style="margin-top: 12px">모바일 컬럼 span (선택)</label>
         <input type="number" id="edit-mobile-col" class="control-input" min="1" max="12" placeholder="비워두면 자동">
         <div class="hint-text" id="mobile-span-hint">자동: 비율 계산</div>
-        <label class="control-label" style="margin-top: 12px">배경색</label>
+        <label class="control-label" style="margin-top: 12px">배경색 (Box 타입 전용)</label>
         <input type="color" id="edit-color" class="control-input" style="height: 40px; cursor: pointer;">
         <div style="display: flex; align-items: center; gap: 5px; margin-top: 5px;">
           <input type="checkbox" id="edit-transparent" onchange="toggleColorPicker('edit', this.checked)">
@@ -164,7 +185,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
         <input type="color" id="edit-border-color" class="control-input" style="height: 40px; cursor: pointer;">
         <label class="control-label" style="margin-top: 12px">윤곽선 두께 (px)</label>
         <input type="number" id="edit-border-width" class="control-input" value="0" min="0" max="20">
-        <button class="btn btn-secondary" style="margin-top: 12px" onclick="deleteSelected()">🗑️ 삭제</button>
+        <button class="btn btn-secondary" style="margin-top: 12px" onclick="deleteSelected()">🗑️ 선택 모듈 삭제</button>
       </div>
 
       <div class="control-group">
@@ -190,7 +211,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
       </div>
 
       <div class="control-group">
-        <button class="btn btn-secondary" onclick="clearAll()">🗑️ 전체 삭제</button>
+        <h3>🔧 도구</h3>
+        <div class="btn-group">
+          <button class="btn btn-secondary" id="undo-btn" onclick="undo()" disabled>↩️ 실행 취소</button>
+          <button class="btn btn-secondary" id="redo-btn" onclick="redo()" disabled>↪️ 다시 실행</button>
+        </div>
+        <button class="btn btn-secondary" onclick="clearAll()" style="background: #fee2e2; color: #dc2626; margin-top: 8px;">🗑️ 전체 삭제</button>
       </div>
     </div>
 
@@ -221,13 +247,94 @@ let currentView = 'desktop', selectedModule = null, activeTab = 'html', draggedI
 let desktopOrder = [], mobileOrder = [];
 let mobileOrderLocked = false;
 
+// --- [신규] 히스토리(Undo/Redo) 변수 ---
+let history = [];
+let historyIndex = -1;
+
+// --- [신규] 상태 복사용 헬퍼 ---
+function deepCopy(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+// --- [신규] 상태 저장 ---
+function saveState() {
+  // 현재 히스토리 인덱스 뒤의 미래 상태(redo 스택)를 모두 제거
+  if (historyIndex < history.length - 1) {
+    history.splice(historyIndex + 1);
+  }
+  
+  // 현재 상태를 깊은 복사(deep copy)하여 저장
+  const state = {
+    modules: deepCopy(modules),
+    desktopOrder: [...desktopOrder],
+    mobileOrder: [...mobileOrder],
+    selectedModuleId: selectedModule !== null ? modules[selectedModule].id : null
+  };
+  
+  history.push(state);
+  historyIndex = history.length - 1;
+  
+  // 히스토리 스택이 너무 커지는 것을 방지 (예: 100단계)
+  if (history.length > 100) {
+    history.shift();
+    historyIndex--;
+  }
+  
+  updateUndoRedoButtons();
+}
+
+// --- [신규] 상태 불러오기 ---
+function loadState(state) {
+  if (!state) return;
+  
+  modules = deepCopy(state.modules);
+  desktopOrder = [...state.desktopOrder];
+  mobileOrder = [...state.mobileOrder];
+  
+  if (state.selectedModuleId !== null) {
+    selectedModule = modules.findIndex(m => m.id === state.selectedModuleId);
+    if (selectedModule === -1) selectedModule = null; // ID를 못찾으면 선택 해제
+  } else {
+    selectedModule = null;
+  }
+  
+  render();
+  updateEditPanel(); // 편집 패널 상태 동기화
+  updateUndoRedoButtons();
+}
+
+// --- [신규] Undo/Redo 함수 ---
+function undo() {
+  if (historyIndex > 0) {
+    historyIndex--;
+    loadState(history[historyIndex]);
+  }
+}
+
+function redo() {
+  if (historyIndex < history.length - 1) {
+    historyIndex++;
+    loadState(history[historyIndex]);
+  }
+}
+
+// --- [신규] Undo/Redo 버튼 활성/비활성 ---
+function updateUndoRedoButtons() {
+  document.getElementById('undo-btn').disabled = (historyIndex <= 0);
+  document.getElementById('redo-btn').disabled = (historyIndex >= history.length - 1);
+}
+
 function toggleColorPicker(prefix, isTransparent) {
   const colorInput = document.getElementById(prefix + '-color');
   colorInput.disabled = isTransparent;
   colorInput.style.opacity = isTransparent ? 0.5 : 1;
   if (prefix === 'edit' && selectedModule !== null) {
-    modules[selectedModule].transparent = isTransparent;
-    render();
+    const m = modules[selectedModule];
+    if (m.transparent !== isTransparent) {
+        m.transparent = isTransparent;
+        render();
+        saveState(); // [히스토리] 상태 저장
+    }
   }
 }
 
@@ -248,9 +355,9 @@ function getMobileSpan(module) {
 function switchView(view) {
   currentView = view;
   document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
-  event.target.classList.add('active');
+  document.querySelector(`.view-btn[onclick="switchView('${view}')"]`).classList.add('active');
   document.getElementById('canvas').classList.toggle('mobile-view', view === 'mobile');
-  deselectModule();
+  deselectModule(); // 뷰 전환 시 선택 해제 (히스토리 저장 없음)
   render();
 }
 
@@ -265,6 +372,7 @@ function selectMode(mode) {
   updateModeHint();
   updateCode();
   showToast(getModeLabel(mode) + ' 모드');
+  // 뷰 모드 변경은 히스토리 저장 안함
 }
 
 function getModeLabel(mode) {
@@ -294,6 +402,7 @@ function toggleMobileOrderLock(event) {
     mobileOrder = [...desktopOrder];
     showToast('모바일 순서가 데스크톱에 동기화됩니다.');
     render();
+    saveState(); // [히스토리] 상태 저장
   } else {
     showToast('모바일 순서 동기화 해제');
   }
@@ -303,25 +412,50 @@ function init() {
   document.getElementById('columns').addEventListener('input', e => { 
     desktopColumns = clamp(parseInt(e.target.value) || 1, 1, 12);
     updateStats(); updateModeHint(); updateMobileSpanHint(); render(); 
+    // 히스토리 저장은 input 이벤트가 끝날 때(change) 하는 것이 좋으나,
+    // 편의를 위해 여기서는 리스너 마지막에 saveState()를 호출합니다.
   });
+  // [히스토리] input 대신 change 이벤트로 저장
+  document.getElementById('columns').addEventListener('change', e => { saveState(); });
+
   document.getElementById('gap').addEventListener('input', e => { 
     desktopGap = clamp(parseInt(e.target.value) || 0, 0, 50);
     updateStats(); render(); 
   });
+  document.getElementById('gap').addEventListener('change', e => { saveState(); });
+
   document.getElementById('target-columns').addEventListener('input', e => { 
     targetColumns = clamp(parseInt(e.target.value) || 1, 1, 12); 
     updateModeHint(); updateMobileSpanHint(); updateCode(); render();
   });
+  document.getElementById('target-columns').addEventListener('change', e => { saveState(); });
   
-  // --- [신규] 캔버스 배율 슬라이더 리스너 ---
   document.getElementById('canvas-scale').addEventListener('input', e => {
     const scaleValue = parseInt(e.target.value);
     document.getElementById('canvas').style.transform = `scale(${scaleValue / 100})`;
     document.getElementById('scale-readout').textContent = `${scaleValue}%`;
   });
-  // ----------------------------------------
 
-  // 모듈 편집 리스너
+  // --- 모듈 편집 리스너 (모두 'change' 이벤트에 saveState() 추가) ---
+  
+  // [신규] 모듈 타입 편집
+  document.getElementById('edit-type').addEventListener('change', e => {
+    if (selectedModule !== null) {
+        modules[selectedModule].type = e.target.value;
+        render();
+        saveState();
+    }
+  });
+
+  // [신규] 그룹 ID 편집
+  document.getElementById('edit-group-id').addEventListener('change', e => {
+    if (selectedModule !== null) {
+        modules[selectedModule].groupId = e.target.value.trim() || null;
+        render();
+        saveState();
+    }
+  });
+
   document.getElementById('edit-col').addEventListener('input', e => { 
     if(selectedModule!==null) { 
       const maxCol = desktopColumns;
@@ -331,12 +465,16 @@ function init() {
       render(); 
     }
   });
+  document.getElementById('edit-col').addEventListener('change', e => { if(selectedModule!==null) saveState(); });
+
   document.getElementById('edit-row').addEventListener('input', e => { 
     if(selectedModule!==null) { 
       modules[selectedModule].row = clamp(parseInt(e.target.value)||1, 1, 99);
       e.target.value = modules[selectedModule].row;
       render(); 
     }});
+  document.getElementById('edit-row').addEventListener('change', e => { if(selectedModule!==null) saveState(); });
+
   document.getElementById('edit-mobile-col').addEventListener('input', e => { 
     if(selectedModule!==null) { 
       const val = e.target.value;
@@ -350,12 +488,18 @@ function init() {
       render(); 
     }
   });
+  document.getElementById('edit-mobile-col').addEventListener('change', e => { if(selectedModule!==null) saveState(); });
+
   document.getElementById('edit-color').addEventListener('input', e => { 
       if(selectedModule!==null) { modules[selectedModule].color = e.target.value; render(); }
   });
+  document.getElementById('edit-color').addEventListener('change', e => { if(selectedModule!==null) saveState(); });
+
   document.getElementById('edit-border-color').addEventListener('input', e => { 
     if(selectedModule!==null) { modules[selectedModule].borderColor = e.target.value; render(); }
   });
+  document.getElementById('edit-border-color').addEventListener('change', e => { if(selectedModule!==null) saveState(); });
+
   document.getElementById('edit-border-width').addEventListener('input', e => { 
     if(selectedModule!==null) { 
       modules[selectedModule].borderWidth = clamp(parseInt(e.target.value) || 0, 0, 20);
@@ -363,8 +507,12 @@ function init() {
       render(); 
     }
   });
+  document.getElementById('edit-border-width').addEventListener('change', e => { if(selectedModule!==null) saveState(); });
 
-  updateStats(); updateModeHint(); render();
+  updateStats(); 
+  updateModeHint(); 
+  render();
+  saveState(); // [히스토리] 초기 상태 저장
 }
 
 function addCustomModule() {
@@ -374,10 +522,13 @@ function addCustomModule() {
   const transparent = document.getElementById('custom-transparent').checked;
   const borderColor = document.getElementById('custom-border-color').value;
   const borderWidth = clamp(parseInt(document.getElementById('custom-border-width').value) || 0, 0, 20);
-
+  const type = document.getElementById('custom-type').value; // [신규] 타입
+  
   const newModule = { 
     col, row, color, transparent, borderColor, borderWidth, 
-    mobileCol: null, id: Date.now() 
+    mobileCol: null, id: Date.now(),
+    type: type, // [신규] 타입 저장
+    groupId: null // [신규] 그룹 ID
   };
   
   modules.push(newModule);
@@ -393,14 +544,28 @@ function addCustomModule() {
   toggleColorPicker('custom', false);
   document.getElementById('custom-border-width').value = 0;
 
-  showToast(`${col}×${row} 모듈 추가`);
+  showToast(`${col}×${row} ${type} 모듈 추가`);
   render();
+  saveState(); // [히스토리] 상태 저장
 }
 
-function selectModule(index) {
-  selectedModule = index;
-  const m = modules[index];
+// --- [수정] 편집 패널 업데이트 로직 분리 ---
+function updateEditPanel() {
+  if (selectedModule === null) {
+    document.getElementById('edit-panel').style.display = 'none';
+    return;
+  }
+  
+  const m = modules[selectedModule];
+  if (!m) { // 모듈이 없는 경우 (Undo 등으로 인해)
+    document.getElementById('edit-panel').style.display = 'none';
+    return;
+  }
+  
   document.getElementById('edit-panel').style.display = 'block';
+  
+  document.getElementById('edit-type').value = m.type || 'box'; // [신규] 타입
+  document.getElementById('edit-group-id').value = m.groupId || ''; // [신규] 그룹 ID
   
   document.getElementById('edit-col').value = clamp(m.col, 1, desktopColumns);
   document.getElementById('edit-col').max = desktopColumns;
@@ -417,7 +582,14 @@ function selectModule(index) {
   document.getElementById('edit-border-width').value = m.borderWidth || 0;
   
   updateMobileSpanHint();
-  render();
+}
+
+function selectModule(index) {
+  if (selectedModule === index) return; // 이미 선택됨
+  selectedModule = index;
+  updateEditPanel(); // 편집 패널 업데이트
+  render(); // 선택 상태(.selected) 갱신
+  // 선택 변경은 히스토리 저장 안함
 }
 
 function handleCanvasClick(event) {
@@ -429,8 +601,9 @@ function handleCanvasClick(event) {
 function deselectModule() {
   if (selectedModule !== null) {
     selectedModule = null;
-    document.getElementById('edit-panel').style.display = 'none';
+    updateEditPanel(); // 편집 패널 숨기기
     render();
+    // 선택 해제는 히스토리 저장 안함
   }
 }
 
@@ -442,18 +615,23 @@ function deleteSelected() {
 
 function deleteModule(index, event) {
   event.stopPropagation();
-  const id = modules[index].id;
+  const idToDelete = modules[index].id;
+  
+  // [신규] 그룹 ID가 있다면, 같은 그룹 모듈도 함께 삭제할지 물어볼 수 있음
+  // (여기서는 일단 단일 삭제만 구현)
+  
   modules.splice(index, 1);
-  desktopOrder = desktopOrder.filter(oid => oid !== id);
-  mobileOrder = mobileOrder.filter(oid => oid !== id);
+  desktopOrder = desktopOrder.filter(id => id !== idToDelete);
+  mobileOrder = mobileOrder.filter(id => id !== idToDelete);
 
   if(selectedModule === index) {
     selectedModule = null;
-    document.getElementById('edit-panel').style.display = 'none';
+    updateEditPanel();
   } else if(selectedModule > index) {
     selectedModule--;
   }
   render();
+  saveState(); // [히스토리] 상태 저장
 }
 
 function clearAll() {
@@ -462,9 +640,10 @@ function clearAll() {
     desktopOrder = [];
     mobileOrder = [];
     selectedModule = null;
-    document.getElementById('edit-panel').style.display = 'none';
+    updateEditPanel();
     showToast('전체 삭제');
     render();
+    saveState(); // [히스토리] 상태 저장
   }
 }
 
@@ -472,6 +651,9 @@ function handleDragStart(index, event) {
   draggedIndex = index;
   event.target.closest('.module').classList.add('dragging');
   event.dataTransfer.effectAllowed = 'move';
+  // 드래그하는 모듈의 ID를 저장 (그룹 드래그를 위해)
+  const order = currentView === 'desktop' ? desktopOrder : mobileOrder;
+  event.dataTransfer.setData('text/plain', order[index]);
 }
 
 function handleDragEnd(event) {
@@ -484,33 +666,78 @@ function handleDragOver(event) {
   event.dataTransfer.dropEffect = 'move';
 }
 
+// --- [수정] 그룹 드래그를 지원하도록 handleDrop 수정 ---
 function handleDrop(index, event) {
   event.preventDefault();
   event.stopPropagation();
   
   if(draggedIndex !== null && draggedIndex !== index) {
     const order = currentView === 'desktop' ? desktopOrder : mobileOrder;
-    const draggedId = order[draggedIndex];
-    order.splice(draggedIndex, 1);
-    order.splice(index, 0, draggedId);
+    const draggedId = parseInt(event.dataTransfer.getData('text/plain'));
+    const draggedModule = modules.find(m => m.id === draggedId);
     
-    if (currentView === 'desktop' && mobileOrderLocked) {
-      mobileOrder = [...desktopOrder];
+    if (!draggedModule) { // 드래그된 모듈을 찾을 수 없음
+        draggedIndex = null;
+        return;
+    }
+
+    const groupId = draggedModule.groupId;
+    let idsToMove = [];
+    
+    if (groupId) {
+        // [그룹 드래그]
+        // 현재 순서(order)에서 동일 그룹 ID를 가진 모듈 ID들을 순서대로 추출
+        idsToMove = order.filter(id => {
+            const m = modules.find(mod => mod.id === id);
+            return m && m.groupId === groupId;
+        });
+    } else {
+        // [단일 드래그]
+        idsToMove.push(draggedId);
+    }
+    
+    // 드롭 대상(target)이 드래그하는 그룹의 일부인지 확인
+    const targetId = order[index];
+    if (idsToMove.includes(targetId)) {
+        draggedIndex = null;
+        return; // 자기 자신 또는 그룹 동료에게 드롭한 경우 무시
+    }
+
+    // 1. 현재 순서(order)에서 이동할 ID들(idsToMove)을 제거
+    let newOrder = order.filter(id => !idsToMove.includes(id));
+    
+    // 2. 제거된 새 순서(newOrder)에서 드롭 대상(targetId)의 새 인덱스를 찾음
+    let newDropIndex = newOrder.indexOf(targetId);
+    
+    // 3. 드롭 대상의 인덱스에 이동할 ID들(idsToMove)을 삽입
+    newOrder.splice(newDropIndex, 0, ...idsToMove);
+
+    // 4. 새 순서를 현재 뷰에 적용
+    if (currentView === 'desktop') {
+      desktopOrder = newOrder;
+      if (mobileOrderLocked) {
+        mobileOrder = [...desktopOrder];
+      }
+    } else {
+      mobileOrder = newOrder;
     }
     
     if (selectedModule !== null) {
         const selectedId = modules[selectedModule].id;
+        // 선택된 모듈의 실제 인덱스가 변경되었을 수 있으므로 ID 기준으로 다시 찾음
         const actualIndex = modules.findIndex(m => m.id === selectedId);
         selectedModule = actualIndex;
     }
     
     render();
+    saveState(); // [히스토리] 상태 저장
   }
   draggedIndex = null;
 }
 
 function getOrderedModules() {
   const order = currentView === 'desktop' ? desktopOrder : mobileOrder;
+  // [수정] modules 배열에서 ID를 찾지 못하는 경우(Undo/Redo 등으로)를 대비해 filter(m => m) 추가
   return order.map(id => modules.find(m => m.id === id)).filter(m => m);
 }
 
@@ -520,6 +747,7 @@ function updateStats() {
   document.getElementById('stat-modules').textContent = `${modules.length}개`;
 }
 
+// --- [수정] 컴포넌트 렌더링 기능 추가 ---
 function render() {
   const grid = document.getElementById('grid');
   const columns = currentView === 'desktop' ? desktopColumns : targetColumns;
@@ -530,30 +758,46 @@ function render() {
   const orderedModules = getOrderedModules();
   
   grid.innerHTML = orderedModules.map((m, i) => {
+    // m은 순서가 적용된 모듈 (getOrderedModules() 결과)
+    // 실제 모듈 데이터(type 등)를 가져오기 위해 modules 배열에서 다시 찾음
     const actualIndex = modules.findIndex(mod => mod.id === m.id);
-    if (actualIndex === -1) return ''; 
+    if (actualIndex === -1) return ''; // 모듈이 없으면 렌더링 스킵
     
-    const isTransparent = m.transparent || false;
-    const bgColor = isTransparent ? 'transparent' : (m.color || '#8c6c3c');
-    const borderWidth = m.borderWidth || 0;
-    const borderColor = m.borderColor || '#000000';
+    const moduleData = modules[actualIndex]; // 실제 원본 데이터
+    
+    const isTransparent = moduleData.transparent || false;
+    const bgColor = isTransparent ? 'transparent' : (moduleData.color || '#8c6c3c');
+    const borderWidth = moduleData.borderWidth || 0;
+    const borderColor = moduleData.borderColor || '#000000';
     const outlineStyle = borderWidth > 0 ? `outline: ${borderWidth}px solid ${borderColor}; outline-offset: -${borderWidth}px;` : '';
     
-    const desktopColSpan = clamp(m.col, 1, desktopColumns);
-    const mobileColSpan = getMobileSpan(m);
+    const desktopColSpan = clamp(moduleData.col, 1, desktopColumns);
+    const mobileColSpan = getMobileSpan(moduleData);
     const col = currentView === 'desktop' ? desktopColSpan : mobileColSpan;
     
     const showWarning = currentView === 'mobile' && 
-                        m.col > targetColumns && 
-                        (m.mobileCol === null || m.mobileCol === undefined || m.mobileCol === '');
+                        moduleData.col > targetColumns && 
+                        (moduleData.mobileCol === null || moduleData.mobileCol === undefined || moduleData.mobileCol === '');
+    
+    // [신규] 타입별 내부 HTML 생성
+    let innerHTML = '';
+    const moduleType = moduleData.type || 'box';
+    if (moduleType === 'text') {
+        innerHTML = `<p class="module-content">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus.</p>`;
+    } else if (moduleType === 'image') {
+        innerHTML = `<img src="https://via.placeholder.com/${desktopColSpan * 100}x${moduleData.row * 50}" alt="placeholder" class="module-content image">`;
+    }
     
     return `
     <div class="module ${selectedModule === actualIndex ? 'selected' : ''} ${showWarning ? 'warning' : ''}" 
-         style="grid-column: span ${col}; grid-row: span ${m.row}; background: ${bgColor}; ${outlineStyle}"
+         style="grid-column: span ${col}; grid-row: span ${moduleData.row}; background: ${moduleType === 'box' ? bgColor : ''}; ${outlineStyle}"
+         data-type="${moduleType}"
+         data-group-id="${moduleData.groupId || ''}"
          onclick="selectModule(${actualIndex})"
          ondragover="handleDragOver(event)"
          ondrop="handleDrop(${i}, event)">
-      <div class="module-info">${m.col}×${m.row}</div>
+      ${innerHTML} 
+      <div class="module-info">${moduleData.col}×${moduleData.row}</div>
       ${showWarning ? '<div class="module-warning">!</div>' : ''}
       <button class="module-delete" onclick="deleteModule(${actualIndex}, event)">×</button>
       <div class="module-drag-handle" 
@@ -562,9 +806,12 @@ function render() {
            ondragend="handleDragEnd(event)">⠿</div>
     </div>
   `}).join('');
-  updateStats(); updateCode();
+  
+  updateStats(); 
+  updateCode();
 }
 
+// --- [수정] 생성된 코드에 타입/그룹 반영 ---
 function generateHTML() {
   return `<!DOCTYPE html>
 <html lang="ko">
@@ -578,7 +825,11 @@ function generateHTML() {
 ${desktopOrder.map((id, i) => {
     const m = modules.find(mod => mod.id === id);
     if (!m) return '';
-    return `    <div class="module module-${i + 1}"></div>`;
+    const groupClass = m.groupId ? ` group-${m.groupId}` : '';
+    // [수정] 타입과 그룹 클래스 추가
+    return `    <div class="module module-${i + 1} type-${m.type || 'box'}${groupClass}">
+${m.type === 'text' ? '      <p>Lorem ipsum...</p>' : (m.type === 'image' ? '      <img src="https://via.placeholder.com/150" alt="placeholder">' : '      ')}
+    </div>`;
   }).join('\n')}
   </div>
 </body>
@@ -602,6 +853,21 @@ function generateCSS() {
   min-height: 60px;
 }
 
+/* [신규] 타입별 기본 스타일 */
+.module.type-image {
+  background: #e0e0e0;
+}
+.module.type-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.module.type-text {
+  background: #ffffff;
+  padding: 10px;
+}
+
 ${desktopOrder.map((id, i) => {
   const m = modules.find(mod => mod.id === id);
   if (!m) return '';
@@ -612,11 +878,14 @@ ${desktopOrder.map((id, i) => {
   const borderWidth = m.borderWidth || 0;
   const borderColor = m.borderColor || '#000000';
   const outlineStyle = borderWidth > 0 ? `\n  outline: ${borderWidth}px solid ${borderColor};\n  outline-offset: -${borderWidth}px;` : '';
+  
+  // [수정] Box 타입일 때만 배경색 적용
+  const backgroundStyle = (m.type === 'box' || !m.type) ? `background: ${bgColor};` : '';
 
   return `.module-${i + 1} {
   grid-column: span ${desktopColSpan};
   grid-row: span ${m.row};
-  background: ${bgColor};${outlineStyle}
+  ${backgroundStyle}${outlineStyle}
 }`;
 }).join('\n\n')}
 
