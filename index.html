@@ -32,82 +32,30 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .canvas { 
   background: whitesmoke; border-radius: 8px; padding: 20px; min-height: 600px; 
   transition: all 0.3s;
-  transform-origin: top center; 
+  transform-origin: top center; /* 배율 변경 기준점 */
 }
+
 .canvas.mobile-view { 
   max-width: 375px; 
   margin: 0 auto; 
-  min-height: auto; 
+  min-height: auto; /* [수정됨] 모바일 뷰 최소 높이 제거 */
 }
+/* [추가됨] 모바일 뷰의 그리드 컨테이너 최소 높이 제거 */
 .canvas.mobile-view .grid-container {
   min-height: auto; 
 }
 
-/* [수정] 그리드 컨테이너는 이제 모듈의 절대 위치를 위한 래퍼임 */
-.grid-container { 
-  display: grid; 
-  gap: 10px; 
-  min-height: 500px; 
-  /* [수정] auto-flow를 사용하지 않음. 
-     grid-template-rows를 동적으로 설정하여 높이를 맞춤 */
-  grid-auto-rows: minmax(10px, auto); /* 최소 행 높이 */
-}
-.module { 
-  /* [수정] position: relative 제거. 그리드 좌표로 직접 제어 */
-  background: #8c6c3c; 
-  border-radius: 0; 
-  min-height: 60px; 
-  cursor: pointer; 
-  border: 2px solid transparent; 
-  transition: all 0.2s; 
-  overflow: hidden; 
-}
+.grid-container { display: grid; gap: 10px; min-height: 500px; }
+.module { background: #8c6c3c; border-radius: 0; min-height: 60px; cursor: pointer; position: relative; border: 2px solid transparent; transition: all 0.2s; overflow: hidden; }
 .module:hover { border-color: #3b82f6; transform: translateY(-2px); }
 .module.selected { border-color: #ef4444; border-width: 3px; }
+/* --- [신규] 그룹화된 모듈 스타일 --- */
 .module[data-group-id] { box-shadow: 0 0 0 2px #a5b4fc inset; }
 .module[data-group-id]:hover { border-color: #3b82f6; }
 .module.selected[data-group-id] { border-color: #ef4444; box-shadow: 0 0 0 3px #ef4444 inset; }
 
-.module.is-hidden {
-  opacity: 0.4;
-  border-style: dashed;
-  border-color: #9ca3af;
-  background-image: repeating-linear-gradient(
-    -45deg,
-    rgba(120, 120, 120, 0.1),
-    rgba(120, 120, 120, 0.1) 5px,
-    transparent 5px,
-    transparent 10px
-  );
-}
-.module.is-hidden:hover {
-  opacity: 0.6;
-  border-color: #3b82f6;
-}
-.module-hidden-badge {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: rgba(239, 68, 68, 0.85);
-  color: white;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 4px;
-  z-index: 10;
-  pointer-events: none; 
-}
-
 .module.dragging { opacity: 0.5; }
 .module.warning { border-color: #f59e0b; border-width: 2px; }
-
-/* [수정] 모듈 내부 UI 위치 잡기 위해 relative 추가 */
-.module-content-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
 .module-info { position: absolute; top: 4px; left: 4px; background: rgba(0,0,0,0.7); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; z-index: 10; }
 .module-warning { position: absolute; top: 4px; right: 28px; background: rgba(245, 158, 11, 0.9); color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; font-weight: 600; z-index: 10; }
 .module-delete { position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; background: rgba(239, 68, 68, 0.9); color: white; border: none; border-radius: 50%; cursor: pointer; display: none; font-size: 14px; z-index: 10; }
@@ -115,6 +63,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .module-drag-handle { position: absolute; bottom: 4px; right: 4px; width: 24px; height: 24px; background: rgba(0,0,0,0.5); color: white; border-radius: 4px; cursor: move; display: none; justify-content: center; align-items: center; font-size: 16px; line-height: 1; padding-bottom: 2px; z-index: 10; }
 .module:hover .module-drag-handle { display: flex; }
 
+/* --- [신규] 모듈 콘텐츠 스타일 --- */
 .module-content { padding: 30px 10px 10px; font-size: 14px; color: #333; }
 .module-content.image { padding: 0; width: 100%; height: 100%; object-fit: cover; }
 .module[data-type="image"] { background: #e0e0e0; }
@@ -134,33 +83,19 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .hint-text { font-size: 0.75em; color: #6b7280; margin-top: 4px; }
 .lock-toggle { display: flex; align-items: center; gap: 8px; background: #f0f9ff; padding: 10px; border-radius: 6px; margin-top: 12px; }
 .lock-toggle label { margin-bottom: 0; font-size: 0.9em; font-weight: 500; }
-
-.visibility-toggle {
-  margin-top: 16px;
-  padding: 12px;
-  background: #f0f9ff;
-  border-radius: 6px;
-}
-.visibility-toggle-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.visibility-toggle-item:first-child {
-  margin-bottom: 8px;
-}
-.visibility-toggle-item label {
-  font-size: 0.9em;
-  font-weight: 500;
-  color: #374151;
-  margin-bottom: 0; 
-}
-
 .code-tabs { display: flex; gap: 8px; margin-bottom: 12px; border-bottom: 2px solid #e5e7eb; }
 .code-tab { padding: 8px 16px; background: transparent; border: none; color: #6b7280; cursor: pointer; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -2px; }
 .code-tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
 .code-display { background: #1e293b; color: #e2e8f0; padding: 16px; border-radius: 6px; font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.6; max-height: 500px; overflow-y: auto; white-space: pre; }
 .toast { position: fixed; bottom: 20px; right: 20px; background: #111827; color: white; padding: 12px 20px; border-radius: 8px; z-index: 1000; }
+
+@media (max-width: 1400px) { }
+
+@media (max-width: 768px) {
+  body { padding: 10px; }
+  .container { padding: 15px; }
+  .workspace { gap: 15px; }
+}
 </style>
 </head>
 <body>
@@ -168,7 +103,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 <div class="container">
   <div class="header">
     <h1>Grid Maker</h1>
-    <p>컴포넌트 + 히스토리 + 그룹화 + 좌표 기반 레이아웃</p> </div>
+    <p>컴포넌트 + 히스토리 + 그룹화 기능</p>
+  </div>
 
   <div class="view-toggle">
     <button class="view-btn active" onclick="switchView('desktop')">🖥️ 데스크톱</button>
@@ -249,18 +185,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
         <input type="color" id="edit-border-color" class="control-input" style="height: 40px; cursor: pointer;">
         <label class="control-label" style="margin-top: 12px">윤곽선 두께 (px)</label>
         <input type="number" id="edit-border-width" class="control-input" value="0" min="0" max="20">
-        
-        <div class="visibility-toggle">
-          <div class="visibility-toggle-item">
-            <input type="checkbox" id="edit-hidden-desktop">
-            <label for="edit-hidden-desktop">🖥️ 데스크톱에서 숨기기</label>
-          </div>
-          <div class="visibility-toggle-item">
-            <input type="checkbox" id="edit-hidden-mobile">
-            <label for="edit-hidden-mobile">📱 모바일에서 숨기기</label>
-          </div>
-        </div>
-        
         <button class="btn btn-secondary" style="margin-top: 12px" onclick="deleteSelected()">🗑️ 선택 모듈 삭제</button>
       </div>
 
@@ -275,20 +199,12 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
         <label class="control-label" style="margin-top: 12px">변환 모드</label>
         <div class="mode-selector">
           <div class="mode-option selected" onclick="selectMode('reflow')" data-mode="reflow">
-            <div class="mode-option-title">🔄 리플로우 (자동 배치)</div>
-            <div class="mode-option-desc">순서대로 재배치 (기본)</div>
+            <div class="mode-option-title">🔄 리플로우</div>
+            <div class="mode-option-desc">순서대로 재배치</div>
           </div>
-          <div class="mode-option" onclick="selectMode('center')" data-mode="center">
-            <div class="mode-option-title">🗄️ 중앙 유지</div>
-            <div class="mode-option-desc">데스크톱 기준, 양끝 제거</div>
-          </div>
-          <div class="mode-option" onclick="selectMode('left')" data-mode="left">
-            <div class="mode-option-title">⬅️ 왼쪽 유지</div>
-            <div class="mode-option-desc">데스크톱 기준, 오른쪽 제거</div>
-          </div>
-          <div class="mode-option" onclick="selectMode('right')" data-mode="right">
-            <div class="mode-option-title">➡️ 오른쪽 유지</div>
-            <div class="mode-option-desc">데스크톱 기준, 왼쪽 제거</div>
+          <div class="mode-option" onclick="selectMode('center')" data-mode="center" style="opacity: 0.5; cursor: not-allowed;">
+            <div class="mode-option-title">⬅️➡️ 중앙 유지 (비활성)</div>
+            <div class="mode-option-desc">양끝 균등 제거</div>
           </div>
         </div>
         <div class="mode-hint" id="mode-hint">6열 → 2열로 리플로우</div>
@@ -330,84 +246,79 @@ let responsiveMode = 'reflow';
 let currentView = 'desktop', selectedModule = null, activeTab = 'html', draggedIndex = null;
 let desktopOrder = [], mobileOrder = [];
 let mobileOrderLocked = false;
+
+// --- [신규] 히스토리(Undo/Redo) 변수 ---
 let history = [];
 let historyIndex = -1;
 
-/* --- [신규] 레이아웃 계산 캐시 --- */
-// 계산 비용이 비싸므로 결과를 캐시
-let layoutCache = new Map(); 
-
+// --- [신규] 상태 복사용 헬퍼 ---
 function deepCopy(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
 
+// --- [신규] 상태 저장 ---
 function saveState() {
+  // 현재 히스토리 인덱스 뒤의 미래 상태(redo 스택)를 모두 제거
   if (historyIndex < history.length - 1) {
     history.splice(historyIndex + 1);
   }
+  
+  // 현재 상태를 깊은 복사(deep copy)하여 저장
   const state = {
     modules: deepCopy(modules),
     desktopOrder: [...desktopOrder],
     mobileOrder: [...mobileOrder],
-    selectedModuleId: selectedModule !== null ? modules[selectedModule].id : null,
-    // [추가] 그리드 설정도 저장
-    desktopColumns, desktopGap, targetColumns, responsiveMode
+    selectedModuleId: selectedModule !== null ? modules[selectedModule].id : null
   };
+  
   history.push(state);
   historyIndex = history.length - 1;
+  
+  // 히스토리 스택이 너무 커지는 것을 방지 (예: 100단계)
   if (history.length > 100) {
     history.shift();
     historyIndex--;
   }
+  
   updateUndoRedoButtons();
 }
 
+// --- [신규] 상태 불러오기 ---
 function loadState(state) {
   if (!state) return;
+  
   modules = deepCopy(state.modules);
   desktopOrder = [...state.desktopOrder];
   mobileOrder = [...state.mobileOrder];
   
-  // [추가] 그리드 설정 복원
-  desktopColumns = state.desktopColumns || 6;
-  desktopGap = state.desktopGap || 10;
-  targetColumns = state.targetColumns || 2;
-  responsiveMode = state.responsiveMode || 'reflow';
-  
-  // UI 동기화
-  document.getElementById('columns').value = desktopColumns;
-  document.getElementById('gap').value = desktopGap;
-  document.getElementById('target-columns').value = targetColumns;
-  document.querySelectorAll('.mode-option').forEach(opt => {
-    opt.classList.toggle('selected', opt.dataset.mode === responsiveMode);
-  });
-
   if (state.selectedModuleId !== null) {
     selectedModule = modules.findIndex(m => m.id === state.selectedModuleId);
-    if (selectedModule === -1) selectedModule = null; 
+    if (selectedModule === -1) selectedModule = null; // ID를 못찾으면 선택 해제
   } else {
     selectedModule = null;
   }
   
-  invalidateLayoutCache(); // [수정] 상태 복원 시 캐시 초기화
   render();
-  updateEditPanel(); 
+  updateEditPanel(); // 편집 패널 상태 동기화
   updateUndoRedoButtons();
-  updateModeHint();
 }
 
+// --- [신규] Undo/Redo 함수 ---
 function undo() {
   if (historyIndex > 0) {
     historyIndex--;
     loadState(history[historyIndex]);
   }
 }
+
 function redo() {
   if (historyIndex < history.length - 1) {
     historyIndex++;
     loadState(history[historyIndex]);
   }
 }
+
+// --- [신규] Undo/Redo 버튼 활성/비활성 ---
 function updateUndoRedoButtons() {
   document.getElementById('undo-btn').disabled = (historyIndex <= 0);
   document.getElementById('redo-btn').disabled = (historyIndex >= history.length - 1);
@@ -422,16 +333,14 @@ function toggleColorPicker(prefix, isTransparent) {
     if (m.transparent !== isTransparent) {
         m.transparent = isTransparent;
         render();
-        saveState();
+        saveState(); // [히스토리] 상태 저장
     }
   }
 }
 
-// [수정] 2. '리플로우' 모드 크기 축소 문제 수정 (Math.ceil 사용)
 function calculateMobileSpan(desktopCol, desktopCols, targetCols) {
   const ratio = desktopCol / desktopCols;
-  // [수정] Math.round 대신 Math.ceil을 사용하여 모듈이 불필요하게 작아지는 것을 방지
-  const calculated = Math.ceil(ratio * targetCols);
+  const calculated = Math.round(ratio * targetCols);
   return Math.max(1, Math.min(calculated, targetCols));
 }
 
@@ -448,46 +357,31 @@ function switchView(view) {
   document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelector(`.view-btn[onclick="switchView('${view}')"]`).classList.add('active');
   document.getElementById('canvas').classList.toggle('mobile-view', view === 'mobile');
-  deselectModule(); 
-  render(); // [수정] 뷰만 전환하므로 캐시 초기화 필요 없음
+  deselectModule(); // 뷰 전환 시 선택 해제 (히스토리 저장 없음)
+  render();
 }
 
-// [수정] selectMode - 비활성화 제거
 function selectMode(mode) {
+  if (mode !== 'reflow') {
+    showToast('이 모드는 현재 아키텍처에서 지원되지 않습니다.');
+    return;
+  }
   responsiveMode = mode;
   document.querySelectorAll('.mode-option').forEach(opt => opt.classList.remove('selected'));
   document.querySelector(`[data-mode="${mode}"]`).classList.add('selected');
   updateModeHint();
-  updateCode(); // CSS 생성 로직이 변경됨
+  updateCode();
   showToast(getModeLabel(mode) + ' 모드');
-  // [수정] 모드 변경은 렌더링에 영향을 주지 않음 (CSS 코드 생성에만 영향)
-  // 하지만 '리플로우' 모드가 아니면 모바일 뷰의 레이아웃 계산이 달라지므로 render() 호출
-  if (currentView === 'mobile') {
-      render();
-  }
-  saveState(); // [수정] 모드 변경도 히스토리에 저장
+  // 뷰 모드 변경은 히스토리 저장 안함
 }
 
 function getModeLabel(mode) {
-  return {'reflow':'리플로우','center':'중앙 유지','left':'왼쪽 유지','right':'오른쪽 유지'}[mode];
+  return {'reflow':'리플로우','center':'중앙 유지','left':'왼쪽 유지','right':'오른쪽 유지','custom':'커스텀'}[mode];
 }
 
-// [수정] updateModeHint - 모든 모드에 대한 힌트 제공
 function updateModeHint() {
   const hint = document.getElementById('mode-hint');
-  let text = `${desktopColumns}열 → ${targetColumns}열`;
-  if (responsiveMode === 'reflow') {
-    hint.textContent = `${text} (리플로우)`;
-  } else if (responsiveMode === 'center') {
-    const drop = desktopColumns - targetColumns;
-    hint.textContent = `${text} (중앙 유지 - 양쪽 ${drop}열 제거)`;
-  } else if (responsiveMode === 'left') {
-    const drop = desktopColumns - targetColumns;
-    hint.textContent = `${text} (왼쪽 유지 - 오른쪽 ${drop}열 제거)`;
-  } else if (responsiveMode === 'right') {
-    const drop = desktopColumns - targetColumns;
-    hint.textContent = `${text} (오른쪽 유지 - 왼쪽 ${drop}열 제거)`;
-  }
+  hint.textContent = `${desktopColumns}열 → ${targetColumns}열로 리플로우`;
 }
 
 function updateMobileSpanHint() {
@@ -507,172 +401,31 @@ function toggleMobileOrderLock(event) {
   if (mobileOrderLocked) {
     mobileOrder = [...desktopOrder];
     showToast('모바일 순서가 데스크톱에 동기화됩니다.');
-    invalidateLayoutCache(); // [수정]
     render();
-    saveState(); 
+    saveState(); // [히스토리] 상태 저장
   } else {
     showToast('모바일 순서 동기화 해제');
   }
 }
 
-/* --- [신규] 레이아웃 캐시 무효화 --- */
-function invalidateLayoutCache() {
-  layoutCache.clear();
-}
-
-/* --- [신규] 핵심: 그리드 레이아웃 계산 함수 --- */
-// 이 함수는 모듈 순서, 크기, 컬럼 수를 기반으로 각 모듈의 (row, col) 시작점을 계산합니다.
-function calculateFullLayout(order, modules, columns) {
-  const cacheKey = `${currentView}-${responsiveMode}-${order.join(',')}-${columns}`;
-  if (layoutCache.has(cacheKey)) {
-    return layoutCache.get(cacheKey);
-  }
-
-  const layout = new Map();
-  // gridMatrix는 그리드의 각 셀이 채워졌는지(모듈 ID) 여부를 추적합니다.
-  const gridMatrix = [];
-  let maxRow = 0; // 현재까지 채워진 최대 row
-
-  // '리플로우'가 아닌 모바일 모드(중앙, 왼쪽, 오른쪽)는 데스크톱 레이아웃을 기반으로 CSS에서 처리됩니다.
-  // 캔버스 프리뷰에서는 '리플로우'와 동일하게 보여주되, CSS 생성 시에만 다르게 작동합니다.
-  // [수정] 사용자의 요청은 'CSS 생성'에 관한 것이었음.
-  // 하지만 프리뷰도 그럴듯하게 보여주기 위해, '리플로우'가 아닌 모드일 때 모바일 뷰라면
-  // 데스크톱 레이아웃을 기반으로 계산해야 합니다.
-  
-  if (currentView === 'mobile' && responsiveMode !== 'reflow') {
-    // '중앙/왼쪽/오른쪽' 모드의 모바일 프리뷰는 
-    // 데스크톱 레이아웃을 가져와서 CSS에서 하듯 필터링/변환합니다.
-    const desktopLayout = getLayout('desktop');
-    const colsToDrop = desktopColumns - targetColumns;
-    let colsToDropLeft = 0;
-
-    if (responsiveMode === 'center') {
-      colsToDropLeft = Math.floor(colsToDrop / 2);
-    } else if (responsiveMode === 'right') {
-      colsToDropLeft = colsToDrop;
-    }
-    // 'left' 모드는 colsToDropLeft = 0
-
-    desktopLayout.forEach((pos, id) => {
-      const module = modules.find(m => m.id === id);
-      if (!module) return;
-
-      const { startCol, startRow } = pos;
-      const endCol = startCol + module.col - 1;
-      
-      const desktopKeepStart = 1 + colsToDropLeft;
-      const desktopKeepEnd = desktopColumns - (colsToDrop - colsToDropLeft);
-
-      // 숨김 처리 (경계에 걸치거나 밖에 있는 경우)
-      if (startCol < desktopKeepStart || endCol > desktopKeepEnd) {
-        layout.set(id, { startCol: 1, startRow: 1, hidden: true, span: 1 }); // 숨김 플래그
-        return;
-      }
-      
-      // '유지' 영역에 포함된 경우
-      const newStartCol = (startCol - colsToDropLeft);
-      // [수정] 1. '중앙/왼쪽/오른쪽' 프리뷰 버그 수정
-      // CSS 생성 로직과 동일하게, 새 시작점에서 그리드 끝을 넘지 않도록 스팬을 재계산
-      const newSpan = Math.min(module.col, columns - newStartCol + 1); // 'columns' is targetColumns
-      
-      layout.set(id, {
-        startCol: newStartCol,
-        startRow: startRow, // row는 데스크톱과 동일하게 유지
-        hidden: false,
-        span: newSpan 
-      });
-      maxRow = Math.max(maxRow, startRow + module.row - 1);
-    });
-    
-    layout.set('__maxRow', maxRow + 1); // 그리드 전체 높이
-    layoutCache.set(cacheKey, layout);
-    return layout;
-  }
-
-  // --- '리플로우' 모드 또는 '데스크톱' 뷰일 때 (자동 배치 시뮬레이션) ---
-  for (const id of order) {
-    const module = modules.find(m => m.id === id);
-    if (!module) continue;
-
-    const colSpan = (currentView === 'desktop') ? clamp(module.col, 1, columns) : getMobileSpan(module);
-    const rowSpan = module.row;
-
-    let placed = false;
-    for (let r = 0; ; r++) { // 무한히 row를 탐색
-      maxRow = Math.max(maxRow, r);
-      if (placed) break;
-      
-      // gridMatrix의 row가 충분한지 확인하고, 없으면 생성
-      if (!gridMatrix[r]) gridMatrix[r] = new Array(columns).fill(null);
-
-      for (let c = 0; c <= columns - colSpan; c++) {
-        if (canPlace(gridMatrix, r, c, colSpan, rowSpan, columns)) {
-          placeModule(gridMatrix, r, c, colSpan, rowSpan, id, columns);
-          layout.set(id, { startCol: c + 1, startRow: r + 1, hidden: false, span: colSpan });
-          placed = true;
-          maxRow = Math.max(maxRow, r + rowSpan - 1);
-          break;
-        }
-      }
-    }
-  }
-
-  layout.set('__maxRow', maxRow + 1); // 그리드 전체 높이
-  layoutCache.set(cacheKey, layout);
-  return layout;
-}
-
-// (헬퍼) gridMatrix의 (r, c) 위치에 (colSpan, rowSpan) 크기의 모듈을 놓을 수 있는지 확인
-function canPlace(gridMatrix, r, c, colSpan, rowSpan, columns) {
-  for (let i = r; i < r + rowSpan; i++) {
-    for (let j = c; j < c + colSpan; j++) {
-      if (j >= columns) return false; // 컬럼 범위 초과
-      if (!gridMatrix[i]) gridMatrix[i] = new Array(columns).fill(null); // row 생성
-      if (gridMatrix[i][j] !== null) return false; // 이미 채워져 있음
-    }
-  }
-  return true;
-}
-
-// (헬퍼) gridMatrix에 모듈 배치 (ID로 마킹)
-function placeModule(gridMatrix, r, c, colSpan, rowSpan, id, columns) {
-  for (let i = r; i < r + rowSpan; i++) {
-    if (!gridMatrix[i]) gridMatrix[i] = new Array(columns).fill(null);
-    for (let j = c; j < c + colSpan; j++) {
-      if (j < columns) {
-        gridMatrix[i][j] = id; // 모듈 ID로 채움
-      }
-    }
-  }
-}
-
-/* --- [신규] 레이아웃 가져오기 (캐시/계산) --- */
-function getLayout(view) {
-  const order = (view === 'desktop') ? desktopOrder : mobileOrder;
-  const columns = (view === 'desktop') ? desktopColumns : targetColumns;
-  return calculateFullLayout(order, modules, columns);
-}
-
-
 function init() {
-  // [수정] 컬럼/갭 변경 시 캐시 초기화 및 saveState
   document.getElementById('columns').addEventListener('input', e => { 
     desktopColumns = clamp(parseInt(e.target.value) || 1, 1, 12);
-    invalidateLayoutCache(); // [수정]
     updateStats(); updateModeHint(); updateMobileSpanHint(); render(); 
+    // 히스토리 저장은 input 이벤트가 끝날 때(change) 하는 것이 좋으나,
+    // 편의를 위해 여기서는 리스너 마지막에 saveState()를 호출합니다.
   });
+  // [히스토리] input 대신 change 이벤트로 저장
   document.getElementById('columns').addEventListener('change', e => { saveState(); });
 
   document.getElementById('gap').addEventListener('input', e => { 
     desktopGap = clamp(parseInt(e.target.value) || 0, 0, 50);
-    invalidateLayoutCache(); // [수정]
     updateStats(); render(); 
   });
   document.getElementById('gap').addEventListener('change', e => { saveState(); });
 
   document.getElementById('target-columns').addEventListener('input', e => { 
     targetColumns = clamp(parseInt(e.target.value) || 1, 1, 12); 
-    invalidateLayoutCache(); // [수정]
     updateModeHint(); updateMobileSpanHint(); updateCode(); render();
   });
   document.getElementById('target-columns').addEventListener('change', e => { saveState(); });
@@ -685,14 +438,16 @@ function init() {
 
   // --- 모듈 편집 리스너 (모두 'change' 이벤트에 saveState() 추가) ---
   
+  // [신규] 모듈 타입 편집
   document.getElementById('edit-type').addEventListener('change', e => {
     if (selectedModule !== null) {
         modules[selectedModule].type = e.target.value;
-        render(); // [수정] 타입 변경은 레이아웃에 영향 X (캐시 초기화 불필요)
+        render();
         saveState();
     }
   });
 
+  // [신규] 그룹 ID 편집
   document.getElementById('edit-group-id').addEventListener('change', e => {
     if (selectedModule !== null) {
         modules[selectedModule].groupId = e.target.value.trim() || null;
@@ -707,7 +462,6 @@ function init() {
       modules[selectedModule].col = clamp(parseInt(e.target.value)||1, 1, maxCol);
       e.target.value = modules[selectedModule].col; 
       updateMobileSpanHint();
-      invalidateLayoutCache(); // [수정]
       render(); 
     }
   });
@@ -717,7 +471,6 @@ function init() {
     if(selectedModule!==null) { 
       modules[selectedModule].row = clamp(parseInt(e.target.value)||1, 1, 99);
       e.target.value = modules[selectedModule].row;
-      invalidateLayoutCache(); // [수정]
       render(); 
     }});
   document.getElementById('edit-row').addEventListener('change', e => { if(selectedModule!==null) saveState(); });
@@ -732,7 +485,6 @@ function init() {
         modules[selectedModule].mobileCol = clamp(parseInt(val)||1, 1, maxCol);
         e.target.value = modules[selectedModule].mobileCol;
       }
-      invalidateLayoutCache(); // [수정]
       render(); 
     }
   });
@@ -757,26 +509,10 @@ function init() {
   });
   document.getElementById('edit-border-width').addEventListener('change', e => { if(selectedModule!==null) saveState(); });
 
-  document.getElementById('edit-hidden-desktop').addEventListener('change', e => {
-    if (selectedModule !== null) {
-      modules[selectedModule].hiddenDesktop = e.target.checked;
-      render();
-      saveState(); 
-    }
-  });
-
-  document.getElementById('edit-hidden-mobile').addEventListener('change', e => {
-    if (selectedModule !== null) {
-      modules[selectedModule].hiddenMobile = e.target.checked;
-      render();
-      saveState(); 
-    }
-  });
-
   updateStats(); 
   updateModeHint(); 
   render();
-  saveState(); 
+  saveState(); // [히스토리] 초기 상태 저장
 }
 
 function addCustomModule() {
@@ -786,15 +522,13 @@ function addCustomModule() {
   const transparent = document.getElementById('custom-transparent').checked;
   const borderColor = document.getElementById('custom-border-color').value;
   const borderWidth = clamp(parseInt(document.getElementById('custom-border-width').value) || 0, 0, 20);
-  const type = document.getElementById('custom-type').value; 
+  const type = document.getElementById('custom-type').value; // [신규] 타입
   
   const newModule = { 
     col, row, color, transparent, borderColor, borderWidth, 
     mobileCol: null, id: Date.now(),
-    type: type, 
-    groupId: null,
-    hiddenDesktop: false, 
-    hiddenMobile: false   
+    type: type, // [신규] 타입 저장
+    groupId: null // [신규] 그룹 ID
   };
   
   modules.push(newModule);
@@ -811,11 +545,11 @@ function addCustomModule() {
   document.getElementById('custom-border-width').value = 0;
 
   showToast(`${col}×${row} ${type} 모듈 추가`);
-  invalidateLayoutCache(); // [수정]
   render();
-  saveState(); 
+  saveState(); // [히스토리] 상태 저장
 }
 
+// --- [수정] 편집 패널 업데이트 로직 분리 ---
 function updateEditPanel() {
   if (selectedModule === null) {
     document.getElementById('edit-panel').style.display = 'none';
@@ -823,47 +557,53 @@ function updateEditPanel() {
   }
   
   const m = modules[selectedModule];
-  if (!m) { 
+  if (!m) { // 모듈이 없는 경우 (Undo 등으로 인해)
     document.getElementById('edit-panel').style.display = 'none';
     return;
   }
   
   document.getElementById('edit-panel').style.display = 'block';
-  document.getElementById('edit-type').value = m.type || 'box'; 
-  document.getElementById('edit-group-id').value = m.groupId || ''; 
+  
+  document.getElementById('edit-type').value = m.type || 'box'; // [신규] 타입
+  document.getElementById('edit-group-id').value = m.groupId || ''; // [신규] 그룹 ID
+  
   document.getElementById('edit-col').value = clamp(m.col, 1, desktopColumns);
   document.getElementById('edit-col').max = desktopColumns;
   document.getElementById('edit-row').value = m.row;
   document.getElementById('edit-mobile-col').value = m.mobileCol !== null ? clamp(m.mobileCol, 1, targetColumns) : '';
   document.getElementById('edit-mobile-col').max = targetColumns;
+  
   document.getElementById('edit-color').value = m.color || '#8c6c3c';
   const isTransparent = m.transparent || false;
   document.getElementById('edit-transparent').checked = isTransparent;
   toggleColorPicker('edit', isTransparent);
+  
   document.getElementById('edit-border-color').value = m.borderColor || '#000000';
   document.getElementById('edit-border-width').value = m.borderWidth || 0;
-  document.getElementById('edit-hidden-desktop').checked = m.hiddenDesktop || false;
-  document.getElementById('edit-hidden-mobile').checked = m.hiddenMobile || false;
-
+  
   updateMobileSpanHint();
 }
 
 function selectModule(index) {
-  if (selectedModule === index) return; 
+  if (selectedModule === index) return; // 이미 선택됨
   selectedModule = index;
-  updateEditPanel(); 
-  render(); 
+  updateEditPanel(); // 편집 패널 업데이트
+  render(); // 선택 상태(.selected) 갱신
+  // 선택 변경은 히스토리 저장 안함
 }
+
 function handleCanvasClick(event) {
   if (event.target.id === 'canvas' || event.target.id === 'grid') {
     deselectModule();
   }
 }
+
 function deselectModule() {
   if (selectedModule !== null) {
     selectedModule = null;
-    updateEditPanel(); 
+    updateEditPanel(); // 편집 패널 숨기기
     render();
+    // 선택 해제는 히스토리 저장 안함
   }
 }
 
@@ -877,6 +617,9 @@ function deleteModule(index, event) {
   event.stopPropagation();
   const idToDelete = modules[index].id;
   
+  // [신규] 그룹 ID가 있다면, 같은 그룹 모듈도 함께 삭제할지 물어볼 수 있음
+  // (여기서는 일단 단일 삭제만 구현)
+  
   modules.splice(index, 1);
   desktopOrder = desktopOrder.filter(id => id !== idToDelete);
   mobileOrder = mobileOrder.filter(id => id !== idToDelete);
@@ -887,9 +630,8 @@ function deleteModule(index, event) {
   } else if(selectedModule > index) {
     selectedModule--;
   }
-  invalidateLayoutCache(); // [수정]
   render();
-  saveState(); 
+  saveState(); // [히스토리] 상태 저장
 }
 
 function clearAll() {
@@ -900,36 +642,31 @@ function clearAll() {
     selectedModule = null;
     updateEditPanel();
     showToast('전체 삭제');
-    invalidateLayoutCache(); // [수정]
     render();
-    saveState(); 
+    saveState(); // [히스토리] 상태 저장
   }
 }
 
-// [수정] 드래그 시작 시, 순서(index)가 아닌 모듈 ID를 저장
 function handleDragStart(index, event) {
-  draggedIndex = index; // 드롭 로직을 위해 순서 인덱스도 유지
+  draggedIndex = index;
   event.target.closest('.module').classList.add('dragging');
   event.dataTransfer.effectAllowed = 'move';
-  
+  // 드래그하는 모듈의 ID를 저장 (그룹 드래그를 위해)
   const order = currentView === 'desktop' ? desktopOrder : mobileOrder;
-  const draggedId = order[index]; // ID 저장
-  const draggedModule = modules.find(m => m.id === draggedId);
-  if (!draggedModule) return;
-  
-  event.dataTransfer.setData('text/plain', draggedId);
+  event.dataTransfer.setData('text/plain', order[index]);
 }
 
 function handleDragEnd(event) {
   document.querySelectorAll('.module.dragging').forEach(el => el.classList.remove('dragging'));
   draggedIndex = null;
 }
+
 function handleDragOver(event) {
   event.preventDefault();
   event.dataTransfer.dropEffect = 'move';
 }
 
-// [수정] 드래그 앤 드롭 로직 (순서 변경)
+// --- [수정] 그룹 드래그를 지원하도록 handleDrop 수정 ---
 function handleDrop(index, event) {
   event.preventDefault();
   event.stopPropagation();
@@ -939,40 +676,43 @@ function handleDrop(index, event) {
     const draggedId = parseInt(event.dataTransfer.getData('text/plain'));
     const draggedModule = modules.find(m => m.id === draggedId);
     
-    if (!draggedModule) { 
+    if (!draggedModule) { // 드래그된 모듈을 찾을 수 없음
         draggedIndex = null;
         return;
     }
+
     const groupId = draggedModule.groupId;
     let idsToMove = [];
+    
     if (groupId) {
+        // [그룹 드래그]
+        // 현재 순서(order)에서 동일 그룹 ID를 가진 모듈 ID들을 순서대로 추출
         idsToMove = order.filter(id => {
             const m = modules.find(mod => mod.id === id);
             return m && m.groupId === groupId;
         });
     } else {
+        // [단일 드래그]
         idsToMove.push(draggedId);
     }
+    
+    // 드롭 대상(target)이 드래그하는 그룹의 일부인지 확인
     const targetId = order[index];
     if (idsToMove.includes(targetId)) {
         draggedIndex = null;
-        return; 
+        return; // 자기 자신 또는 그룹 동료에게 드롭한 경우 무시
     }
+
+    // 1. 현재 순서(order)에서 이동할 ID들(idsToMove)을 제거
     let newOrder = order.filter(id => !idsToMove.includes(id));
+    
+    // 2. 제거된 새 순서(newOrder)에서 드롭 대상(targetId)의 새 인덱스를 찾음
     let newDropIndex = newOrder.indexOf(targetId);
     
-    // [수정] 드롭 위치가 드래그 시작 위치보다 앞이면 +1
-    const originalDropIndexInFiltered = newOrder.indexOf(targetId);
-    const originalDragIndex = order.indexOf(draggedId);
-    
-    if (originalDragIndex < index) {
-         newDropIndex = originalDropIndexInFiltered + 1;
-    } else {
-         newDropIndex = originalDropIndexInFiltered;
-    }
-
+    // 3. 드롭 대상의 인덱스에 이동할 ID들(idsToMove)을 삽입
     newOrder.splice(newDropIndex, 0, ...idsToMove);
 
+    // 4. 새 순서를 현재 뷰에 적용
     if (currentView === 'desktop') {
       desktopOrder = newOrder;
       if (mobileOrderLocked) {
@@ -984,18 +724,20 @@ function handleDrop(index, event) {
     
     if (selectedModule !== null) {
         const selectedId = modules[selectedModule].id;
-        selectedModule = modules.findIndex(m => m.id === selectedId);
+        // 선택된 모듈의 실제 인덱스가 변경되었을 수 있으므로 ID 기준으로 다시 찾음
+        const actualIndex = modules.findIndex(m => m.id === selectedId);
+        selectedModule = actualIndex;
     }
     
-    invalidateLayoutCache(); // [수정]
     render();
-    saveState(); 
+    saveState(); // [히스토리] 상태 저장
   }
   draggedIndex = null;
 }
 
 function getOrderedModules() {
   const order = currentView === 'desktop' ? desktopOrder : mobileOrder;
+  // [수정] modules 배열에서 ID를 찾지 못하는 경우(Undo/Redo 등으로)를 대비해 filter(m => m) 추가
   return order.map(id => modules.find(m => m.id === id)).filter(m => m);
 }
 
@@ -1005,7 +747,7 @@ function updateStats() {
   document.getElementById('stat-modules').textContent = `${modules.length}개`;
 }
 
-// --- [수정] 렌더링 함수 (절대 좌표 사용) ---
+// --- [수정] 컴포넌트 렌더링 기능 추가 ---
 function render() {
   const grid = document.getElementById('grid');
   const columns = currentView === 'desktop' ? desktopColumns : targetColumns;
@@ -1013,29 +755,15 @@ function render() {
   grid.style.gridTemplateColumns = `repeat(${columns}, 1fr)`;
   grid.style.gap = `${gap}px`;
   
-  const layout = getLayout(currentView);
-  const maxRow = layout.get('__maxRow') || 10; // 계산된 최대 row
+  const orderedModules = getOrderedModules();
   
-  // 그리드의 전체 높이를 동적으로 설정 (모듈이 넘치지 않도록)
-  grid.style.gridTemplateRows = `repeat(${maxRow}, minmax(10px, auto))`;
-
-  const order = currentView === 'desktop' ? desktopOrder : mobileOrder;
-  
-  grid.innerHTML = order.map((id, i) => {
-    const actualIndex = modules.findIndex(mod => mod.id === id);
-    if (actualIndex === -1) return ''; 
+  grid.innerHTML = orderedModules.map((m, i) => {
+    // m은 순서가 적용된 모듈 (getOrderedModules() 결과)
+    // 실제 모듈 데이터(type 등)를 가져오기 위해 modules 배열에서 다시 찾음
+    const actualIndex = modules.findIndex(mod => mod.id === m.id);
+    if (actualIndex === -1) return ''; // 모듈이 없으면 렌더링 스킵
     
-    const moduleData = modules[actualIndex];
-    const pos = layout.get(id);
-
-    // 레이아웃 계산이 안됐거나 숨김 처리된 경우
-    if (!pos || pos.hidden) {
-       // 모바일 '정렬' 모드 프리뷰에서 숨김 처리
-       return `<div class="module is-hidden" 
-                  style="grid-column: 1; grid-row: 1; display: none;"></div>`;
-    }
-
-    const { startCol, startRow, span } = pos;
+    const moduleData = modules[actualIndex]; // 실제 원본 데이터
     
     const isTransparent = moduleData.transparent || false;
     const bgColor = isTransparent ? 'transparent' : (moduleData.color || '#8c6c3c');
@@ -1043,48 +771,39 @@ function render() {
     const borderColor = moduleData.borderColor || '#000000';
     const outlineStyle = borderWidth > 0 ? `outline: ${borderWidth}px solid ${borderColor}; outline-offset: -${borderWidth}px;` : '';
     
+    const desktopColSpan = clamp(moduleData.col, 1, desktopColumns);
+    const mobileColSpan = getMobileSpan(moduleData);
+    const col = currentView === 'desktop' ? desktopColSpan : mobileColSpan;
+    
     const showWarning = currentView === 'mobile' && 
                         moduleData.col > targetColumns && 
                         (moduleData.mobileCol === null || moduleData.mobileCol === undefined || moduleData.mobileCol === '');
     
-    const isHiddenInCurrentView = (currentView === 'desktop' && moduleData.hiddenDesktop) || 
-                                  (currentView === 'mobile' && moduleData.hiddenMobile);
-    const hiddenClass = isHiddenInCurrentView ? 'is-hidden' : '';
-    const hiddenBadge = isHiddenInCurrentView ? '<div class="module-hidden-badge">🚫 HIDE</div>' : '';
-
+    // [신규] 타입별 내부 HTML 생성
     let innerHTML = '';
     const moduleType = moduleData.type || 'box';
     if (moduleType === 'text') {
-        innerHTML = `<p class="module-content">Lorem ipsum dolor sit amet...</p>`;
+        innerHTML = `<p class="module-content">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed non risus.</p>`;
     } else if (moduleType === 'image') {
-        innerHTML = `<img src="https://via.placeholder.com/${span * 100}x${moduleData.row * 50}" alt="placeholder" class="module-content image">`;
+        innerHTML = `<img src="https://via.placeholder.com/${desktopColSpan * 100}x${moduleData.row * 50}" alt="placeholder" class="module-content image">`;
     }
     
     return `
-    <div class="module ${selectedModule === actualIndex ? 'selected' : ''} ${showWarning ? 'warning' : ''} ${hiddenClass}" 
-         style="
-           grid-column: ${startCol} / span ${span}; 
-           grid-row: ${startRow} / span ${moduleData.row}; 
-           background: ${moduleType === 'box' ? bgColor : ''}; 
-           ${outlineStyle}
-         "
+    <div class="module ${selectedModule === actualIndex ? 'selected' : ''} ${showWarning ? 'warning' : ''}" 
+         style="grid-column: span ${col}; grid-row: span ${moduleData.row}; background: ${moduleType === 'box' ? bgColor : ''}; ${outlineStyle}"
          data-type="${moduleType}"
          data-group-id="${moduleData.groupId || ''}"
          onclick="selectModule(${actualIndex})"
          ondragover="handleDragOver(event)"
          ondrop="handleDrop(${i}, event)">
-      
-      <div class="module-content-wrapper">
-        ${innerHTML} 
-        ${hiddenBadge} 
-        <div class="module-info">${moduleData.col}×${moduleData.row}</div>
-        ${showWarning ? '<div class="module-warning">!</div>' : ''}
-        <button class="module-delete" onclick="deleteModule(${actualIndex}, event)">×</button>
-        <div class="module-drag-handle" 
-             draggable="true" 
-             ondragstart="handleDragStart(${i}, event)" 
-             ondragend="handleDragEnd(event)">⠿</div>
-      </div>
+      ${innerHTML} 
+      <div class="module-info">${moduleData.col}×${moduleData.row}</div>
+      ${showWarning ? '<div class="module-warning">!</div>' : ''}
+      <button class="module-delete" onclick="deleteModule(${actualIndex}, event)">×</button>
+      <div class="module-drag-handle" 
+           draggable="true" 
+           ondragstart="handleDragStart(${i}, event)" 
+           ondragend="handleDragEnd(event)">⠿</div>
     </div>
   `}).join('');
   
@@ -1092,6 +811,7 @@ function render() {
   updateCode();
 }
 
+// --- [수정] 생성된 코드에 타입/그룹 반영 ---
 function generateHTML() {
   return `<!DOCTYPE html>
 <html lang="ko">
@@ -1106,6 +826,7 @@ ${desktopOrder.map((id, i) => {
     const m = modules.find(mod => mod.id === id);
     if (!m) return '';
     const groupClass = m.groupId ? ` group-${m.groupId}` : '';
+    // [수정] 타입과 그룹 클래스 추가
     return `    <div class="module module-${i + 1} type-${m.type || 'box'}${groupClass}">
 ${m.type === 'text' ? '      <p>Lorem ipsum...</p>' : (m.type === 'image' ? '      <img src="https://via.placeholder.com/150" alt="placeholder">' : '      ')}
     </div>`;
@@ -1115,12 +836,7 @@ ${m.type === 'text' ? '      <p>Lorem ipsum...</p>' : (m.type === 'image' ? '   
 </html>`;
 }
 
-// --- [수정] CSS 생성 로직 (좌표 및 정렬 모드 반영) ---
 function generateCSS() {
-  /* [수정] 데스크톱 레이아웃 계산 */
-  const desktopLayout = getLayout('desktop');
-  const desktopMaxRow = desktopLayout.get('__maxRow') || 10;
-  
   let css = `body {
   margin: 0;
   background: whitesmoke;
@@ -1131,44 +847,44 @@ function generateCSS() {
   display: grid;
   grid-template-columns: repeat(${desktopColumns}, 1fr);
   gap: ${desktopGap}px;
-  /* [수정] 계산된 높이 반영 */
-  grid-template-rows: repeat(${desktopMaxRow}, minmax(10px, auto));
 }
 
 .module {
   min-height: 60px;
 }
 
-/* 타입별 기본 스타일 */
-.module.type-image { background: #e0e0e0; }
-.module.type-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.module.type-text { background: #ffffff; padding: 10px; }
+/* [신규] 타입별 기본 스타일 */
+.module.type-image {
+  background: #e0e0e0;
+}
+.module.type-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.module.type-text {
+  background: #ffffff;
+  padding: 10px;
+}
 
 ${desktopOrder.map((id, i) => {
   const m = modules.find(mod => mod.id === id);
   if (!m) return '';
-
-  if (m.hiddenDesktop) {
-    return `.module-${i + 1} {
-  display: none; /* 데스크톱 숨김 */
-}`;
-  }
+  const desktopColSpan = clamp(m.col, 1, desktopColumns);
   
-  const pos = desktopLayout.get(id);
-  if (!pos) return ''; // 레이아웃 정보 없음
-  const { startCol, startRow } = pos;
-
   const isTransparent = m.transparent || false;
   const bgColor = isTransparent ? 'transparent' : (m.color || '#8c6c3c');
   const borderWidth = m.borderWidth || 0;
   const borderColor = m.borderColor || '#000000';
   const outlineStyle = borderWidth > 0 ? `\n  outline: ${borderWidth}px solid ${borderColor};\n  outline-offset: -${borderWidth}px;` : '';
+  
+  // [수정] Box 타입일 때만 배경색 적용
   const backgroundStyle = (m.type === 'box' || !m.type) ? `background: ${bgColor};` : '';
 
-  /* [수정] 절대 좌표 사용 */
   return `.module-${i + 1} {
-  grid-column: ${startCol} / span ${m.col};
-  grid-row: ${startRow} / span ${m.row};
+  grid-column: span ${desktopColSpan};
+  grid-row: span ${m.row};
   ${backgroundStyle}${outlineStyle}
 }`;
 }).join('\n\n')}
@@ -1179,29 +895,57 @@ ${desktopOrder.map((id, i) => {
   .grid-container {
     grid-template-columns: repeat(${targetColumns}, 1fr);
     gap: ${mobileGap}px;
-    grid-template-rows: auto; /* [수정] 모바일에선 row 높이 자동 */
   }
   
 `;
 
-  // [수정] 모바일 CSS 생성 로직 (모든 모드)
-  
   if(responsiveMode === 'reflow') {
-    // 리플로우 모드일 때만 모바일 레이아웃 재계산
-    const mobileLayout = getLayout('mobile');
-    const mobileMaxRow = mobileLayout.get('__maxRow') || 10;
-    css += `  .grid-container { grid-template-rows: repeat(${mobileMaxRow}, minmax(10px, auto)); }\n\n`;
-
-    css += mobileOrder.map((id, i) => {
+      css += mobileOrder.map((id, i) => {
       const m = modules.find(mod => mod.id === id);
       if (!m) return '';
       const moduleClassIndex = desktopOrder.indexOf(id) + 1;
       if (moduleClassIndex === 0) return ''; 
 
-      if (m.hiddenMobile) {
-        return `  .module-${moduleClassIndex} { display: none; /* 모바일 숨김 */ }`;
-      }
+      const mobileSpan = getMobileSpan(m);
+      const comment = m.mobileCol !== null ? ' /* 수동 설정 */' : ` /* 자동: ${m.col}/${desktopColumns} × ${targetColumns} = ${mobileSpan} */`;
       
-      const pos = mobileLayout.get(id);
-      if (!pos) return '';
-      const
+      return `  .module-${moduleClassIndex} {
+    grid-column: span ${mobileSpan};${comment}
+    grid-row: span ${m.row};
+    order: ${i};
+  }`;
+    }).join('\n\n');
+  } 
+
+  css += '\n}';
+  return css;
+}
+
+function updateCode() {
+  document.getElementById('code-display').textContent = activeTab === 'html' ? generateHTML() : generateCSS();
+}
+
+function switchTab(tab, event) {
+  activeTab = tab;
+  document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  updateCode();
+}
+
+function copyCode() {
+  navigator.clipboard.writeText(activeTab === 'html' ? generateHTML() : generateCSS());
+  showToast(`${activeTab.toUpperCase()} 코드 복사됨!`);
+}
+
+function showToast(message) {
+  const toast = document.getElementById('toast');
+  toast.textContent = message;
+  toast.style.display = 'block';
+  setTimeout(() => toast.style.display = 'none', 3000);
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+
+</body>
+</html>
